@@ -1,5 +1,4 @@
 import argparse
-import os
 
 from libs.common.PIDhandler import PIDhandler
 import sys
@@ -114,24 +113,6 @@ def main():
         'hdtrailers': doHDTrailers,
         None: doNothing
     }[template](config)
-
-    # try:
-    #     conn_params = {
-    #         'user': "kodi",
-    #         'password': "kodi",
-    #         'host': "192.168.132.143",
-    #         'port': 3306
-    #     }
-    #
-    #     # establish a connection
-    #     connection = mariadb.connect(**conn_params)
-    #     cursor = connection.cursor()
-    #
-    # except mariadb.Error as e:
-    #     print(f"Error connecting to MariaDB Platform: {e}")
-    #     sys.exit(1)
-    #
-    # print(cursor)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 from libs.core.Datalayer.DL_settings import DL_settings
-from libs.core.databaseCore import databaseCore, _executeNonQuery
+from libs.core.databaseCore import databaseCore
+from libs.core.databaseHelper import databaseHelper
 
 
 class DB_hartaberfair(databaseCore):
@@ -39,7 +40,7 @@ class DB_hartaberfair(databaseCore):
                         '   PRIMARY KEY (`show_id`)' \
                         ');'
 
-            _executeNonQuery(con, statement)
+            databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TABLE IF NOT EXISTS show_links (' \
                         '   link_id INT NOT NULL AUTO_INCREMENT,' \
@@ -49,7 +50,7 @@ class DB_hartaberfair(databaseCore):
                         '   PRIMARY KEY (link_id)' \
                         ');'
 
-            _executeNonQuery(con, statement)
+            databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TABLE IF NOT EXISTS settings (' \
                         '   setting_id INT NOT NULL AUTO_INCREMENT,' \
@@ -58,7 +59,7 @@ class DB_hartaberfair(databaseCore):
                         '   PRIMARY KEY (setting_id)' \
                         ');'
 
-            _executeNonQuery(con, statement)
+            databaseHelper.executeNonQuery(con, statement)
 
             dl = DL_settings()
             dl.setSetting(con, 'database_version', '1')
