@@ -8,6 +8,7 @@ from libs.core.Database.DB_hartaberfair import DB_hartaberfair
 from libs.core.Database.DB_inasnacht import DB_inasnacht
 from libs.core.Database.DB_rockpalast import DB_rockpalast
 from libs.core.Datalayer.DL_shows import DL_shows
+from libs.core.Datalayer.DL_show_links import DL_show_links
 
 class ardmediathekCore():
 
@@ -107,6 +108,17 @@ class ardmediathekCore():
             item = content['widgets'][0]
             plot = item['synopsis']
             DL_shows.UpdatePlot(con, show_id, plot)
+
+            mediastreamarray = item['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
+            for stream in mediastreamarray:
+
+                item = (
+                    show_id,
+                    stream['_quality'],
+                    stream['_stream'],
+                )
+
+                DL_show_links.insertLink(con, item)
 
         con.close()
 
