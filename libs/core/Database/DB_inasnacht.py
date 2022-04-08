@@ -42,6 +42,7 @@ class DB_inasnacht(databaseCore):
                         '   available_to_date DATETIME,' \
                         '   duration BIGINT,' \
                         '   sign_language BIT,' \
+                        '   music_clip BIT,' \
                         '   PRIMARY KEY (`show_id`)' \
                         ');'
 

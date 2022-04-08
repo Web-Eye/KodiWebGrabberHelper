@@ -82,6 +82,7 @@ class ardmediathekCore():
 
             title = show['longTitle']
             sign_language = ('(mit Gebärdensprache)' in title)
+            music_clip = ('Musik bei Inas Nacht:' in title)
 
             item = (
                 API_id,
@@ -92,6 +93,7 @@ class ardmediathekCore():
                 tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                 show['duration'],
                 sign_language,
+                music_clip,
             )
 
             detail_url = show['links']['target']['href']

@@ -11,7 +11,7 @@ class DL_shows:
     @staticmethod
     def insertShow(con, item):
         statement = 'INSERT INTO shows (API_id, title, plot, poster_url, broadcasted_date, available_to_date, ' \
-                    'duration, sign_language) VALUES (?, ?, ?, ?, ?, ?, ?, ?) '
+                    'duration, sign_language, music_clip) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
 
         rowCount, show_id = databaseHelper.executeNonQuery(con, statement, item)
         return show_id
