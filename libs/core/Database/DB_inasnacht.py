@@ -41,6 +41,7 @@ class DB_inasnacht(databaseCore):
                         '   broadcasted_date DATETIME,' \
                         '   available_to_date DATETIME,' \
                         '   duration BIGINT,' \
+                        '   sign_language BIT,' \
                         '   PRIMARY KEY (`show_id`)' \
                         ');'
 

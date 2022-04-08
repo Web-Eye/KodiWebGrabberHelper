@@ -80,14 +80,18 @@ class ardmediathekCore():
                 con.close()
                 return False
 
+            title = show['longTitle']
+            sign_language = ('(mit Gebärdensprache)' in title)
+
             item = (
                 API_id,
-                show['longTitle'],
+                title,
                 None,
                 show['images']['aspect16x9']['src'],
                 tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                 tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                 show['duration'],
+                sign_language,
             )
 
             detail_url = show['links']['target']['href']
