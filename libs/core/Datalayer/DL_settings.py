@@ -3,18 +3,23 @@ from libs.core.databaseHelper import databaseHelper
 
 class DL_settings:
 
-    def __init__(self, config):
-        self._config = config
-
-    def settingExists(self, con, name):
+    @staticmethod
+    def settingExists(con, name):
         c = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM settings WHERE name = ?', (name,))
         return c != 0
 
-    def getSetting(self, con, name):
-        pass
+    @staticmethod
+    def getSetting( con, name):
+        cursor = databaseHelper.executeReader(con, 'SELECT value FROM settings WHERE name = ?', (name,))
+        row = cursor.fetchone()
+        if row is not None:
+            return row[0]
 
-    def setSetting(self, con, name, value):
-        if self.settingExists(con, name):
+        return None
+
+    @staticmethod
+    def setSetting(con, name, value):
+        if DL_settings.settingExists(con, name):
             databaseHelper.executeNonQuery(con, 'UPDATE settings SET value = ? WHERE name = ?', (value, name,))
         else:
             databaseHelper.executeNonQuery(con, 'INSERT INTO settings (name, value) VALUES (?, ?)', (name, value,))

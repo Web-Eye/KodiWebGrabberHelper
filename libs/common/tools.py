@@ -1,6 +1,8 @@
 import json
 import os.path
 import sys
+import time
+from datetime import datetime
 
 
 def GetPIDFile(filename):
@@ -37,3 +39,18 @@ def ReadConfig(filename):
             return json.load(json_data_file)
 
     return None
+
+
+def getDateTime(strDateTime, strFormat):
+    if strDateTime is not None:
+        return datetime(*(time.strptime(strDateTime, strFormat)[0:6]))
+    return None
+
+
+def convertDateTime(strDateTime, srcFormat, dstFormat):
+    dt = getDateTime(strDateTime, srcFormat)
+    if dt is not None:
+        return dt.strftime(dstFormat)
+
+    return None
+

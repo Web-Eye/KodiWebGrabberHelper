@@ -42,6 +42,18 @@ class databaseHelper:
         return row_count, last_row_id
 
     @staticmethod
+    def executeReader(con, query, parameters=None):
+
+        try:
+            cursor = con.cursor()
+            cursor.execute(query, parameters)
+            return cursor
+
+        except mariadb.Error as e:
+            print(f"Error connecting to MariaDB Platform: {e}")
+            return None
+
+    @staticmethod
     def database_exists(con, databasename):
         result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?',
                                 (databasename,))
@@ -56,9 +68,9 @@ class databaseHelper:
         return rows[0] == 1
 
     @staticmethod
-    def tableExists(con, tablename):
-        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = ?',
-                                (tablename,))
+    def tableExists(con, databasename, tablename):
+        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
+                                (databasename, tablename,))
         if result == 1:
             return True
 

@@ -9,6 +9,9 @@ class databaseCore:
         self._config = config
         self._db_name = db_name
 
+    def DBName(self):
+        return self._db_name
+
     def getConnection(self, database_name=None):
         return mariadb.connect(
             host=self._config['host'],
@@ -36,8 +39,11 @@ class databaseCore:
             return False
 
     def get_database_version(self, con):
-        if not databaseHelper.tableExists(con, 'settings'):
+        if not databaseHelper.tableExists(con, self._db_name, 'settings'):
             return 0
 
-        dl = DL_settings()
-        return dl.getSetting(con, 'database_version')
+        retValue = DL_settings.getSetting(con, 'database_version')
+        if retValue is not None:
+            return int(retValue)
+
+        return 0

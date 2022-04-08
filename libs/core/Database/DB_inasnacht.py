@@ -3,13 +3,13 @@ from libs.core.databaseCore import databaseCore
 from libs.core.databaseHelper import databaseHelper
 
 
-class DB_hartaberfair(databaseCore):
+class DB_inasnacht(databaseCore):
 
     CURRENT_DB_VERSION = 1
-    DB_NAME = 'wghHARTABERFAIR'
+    DB_NAME = 'wghINASNACHT'
 
     def __init__(self, config):
-        super().__init__(config, DB_hartaberfair.DB_NAME)
+        super().__init__(config, DB_inasnacht.DB_NAME)
 
     def check_database(self):
         if self.create_database():
@@ -19,10 +19,10 @@ class DB_hartaberfair(databaseCore):
         return False
 
     def update_database(self):
-        con = super().getConnection(self._db_name)
+        con = self.getConnection(self._db_name)
         dbVersion = self.get_database_version(con)
 
-        while dbVersion < DB_hartaberfair.CURRENT_DB_VERSION:
+        while dbVersion < DB_inasnacht.CURRENT_DB_VERSION:
             dbVersion = self._update_database(con, dbVersion)
 
         con.close()

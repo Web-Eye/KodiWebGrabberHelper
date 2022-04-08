@@ -6,6 +6,7 @@ from os import _exit
 
 from libs.common.enums import cores
 from libs.core.ardmediathekCore import ardmediathekCore
+from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig
 
 
@@ -32,6 +33,16 @@ def doInasNacht(config):
     pidfile = "InasNacht.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
+    core = None
+
+    try:
+        core = ardmediathekCore(cores.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config)
+        core.run()
+
+    except KeyboardInterrupt:
+        if core is not None:
+            print("interupt")
+            pass
 
     h.unlinkPID()
     _exit(1)
@@ -41,6 +52,16 @@ def doRockpalast(config):
     pidfile = "Rockpalast.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
+    core = None
+
+    try:
+        core = ardmediathekCore(cores.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config)
+        core.run()
+
+    except KeyboardInterrupt:
+        if core is not None:
+            print("interupt")
+            pass
 
     h.unlinkPID()
     _exit(1)
@@ -50,6 +71,16 @@ def doHDTrailers(config):
     pidfile = "HDTrailers.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
+    core = None
+
+    try:
+        core = hdtrailersCore(cores.HDTRAILERS, config)
+        core.run()
+
+    except KeyboardInterrupt:
+        if core is not None:
+            print("interupt")
+            pass
 
     h.unlinkPID()
     _exit(1)
