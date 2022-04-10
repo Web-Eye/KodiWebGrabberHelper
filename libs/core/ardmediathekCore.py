@@ -3,44 +3,27 @@ import json
 import requests
 
 from libs.common import tools
-from libs.common.enums import cores
-from libs.core.Database.DB_hartaberfair import DB_hartaberfair
-from libs.core.Database.DB_inasnacht import DB_inasnacht
-from libs.core.Database.DB_rockpalast import DB_rockpalast
-from libs.core.Datalayer.DL_shows import DL_shows
-from libs.core.Datalayer.DL_show_links import DL_show_links
+from libs.common.enums import tagEnum, coreEnum, subItemTagEnum
+from libs.core.Datalayer.DL_items import DL_items
+from libs.core.Datalayer.DL_subItems import DL_subItems
+from libs.core.databaseCore import databaseCore
+from libs.core.databaseHelper import databaseHelper
 
-class ardmediathekCore():
+
+class ardmediathekCore:
 
     def __init__(self, core, channel, mediathek_id, config):
         self._core = core
         self._channel = channel
         self._mediathek_id = mediathek_id
         self._config = config
-        self._db = None
-
         self._baseurl = f'https://api.ardmediathek.de/page-gateway/widgets/{channel}/asset/{mediathek_id}' \
                         '?pageNumber={pageNumber}&pageSize={pageSize}&embedded=true&seasoned=false&seasonNumber=' \
                         '&withAudiodescription=false&withOriginalWithSubtitle=false&withOriginalversion=false '
 
-
     def run(self):
-        print("start")
 
-        if self._core == cores.HARTABERFAIR:
-            self._db = DB_hartaberfair(self._config)
-        elif self._core == cores.INASNACHT:
-            self._db = DB_inasnacht(self._config)
-        elif self._core == cores.ROCKPALAST:
-            self._db = DB_rockpalast(self._config)
-
-        if self._db.check_database():
-            self.GrabShows()
-        else:
-            print('can''t connect to database')
-
-
-    def GrabShows(self):
+        con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
 
         pagenumber = 0
         pagesize = 48
@@ -58,7 +41,7 @@ class ardmediathekCore():
                 break
 
             shows = content['teasers']
-            if not self.getShows(shows):
+            if not self.getShows(con, shows):
                 break
 
             pagination = content['pagination']
@@ -68,58 +51,87 @@ class ardmediathekCore():
             pagenumber = pagenumber + 1
             totalelements = int(pagination['totalElements'])
 
-    def getShows(self, shows):
+        con.close()
+
+    def getShows(self, con, shows):
 
         if shows is None:
             return False
 
-        con = self._db.getConnection(self._db.DBName())
-
         for show in shows:
-            API_id = show['id']
-            if DL_shows.showExists(con, API_id):
-                con.close()
+            identifier = show['id']
+            if DL_items.existsItem(con, self._core.name, identifier):
                 return False
 
-            title = show['longTitle']
-            sign_language = ('(mit Gebärdensprache)' in title)
-            music_clip = ('Musik bei Inas Nacht:' in title)
-
-            item = (
-                API_id,
-                title,
-                None,
-                show['images']['aspect16x9']['src'],
-                tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
-                tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
-                show['duration'],
-                sign_language,
-                music_clip,
-            )
-
             detail_url = show['links']['target']['href']
-            show_id = DL_shows.insertShow(con, item)
-
             page = requests.get(detail_url)
             content = json.loads(page.content)
             if content is None:
-                break
+                return False
 
-            item = content['widgets'][0]
-            plot = item['synopsis']
-            DL_shows.UpdatePlot(con, show_id, plot)
+            title = show['longTitle']
+            widget = content['widgets'][0]
 
-            mediastreamarray = item['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
-            for stream in mediastreamarray:
+            item = (
+                self._core.name,
+                identifier,
+                title,
+                widget['synopsis'],
+                self.getTag(title).name,
+                show['images']['aspect16x9']['src'],
+                tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
+            )
 
-                item = (
-                    show_id,
-                    stream['_quality'],
-                    stream['_stream'],
-                )
+            item_id = DL_items.insertItem(con, item)
 
-                DL_show_links.insertLink(con, item)
+            item = (
+                item_id,
+                title,
+                subItemTagEnum.NONE.name,
+                tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                show['duration'],
+            )
 
-        con.close()
+            subItem_id = DL_subItems.insertItem(con, item)
+
+            ## TODO save links
+
+            ## _quality: 0 --> 270p
+            ## _quality: 1 --> 360p
+            ## _quality: 2 --> 540p
+            ## _quality: 3 --> 720p
+            ## _quality: 4 --> 1080p
+            ## _quality: 'auto' --> skip
+
+            # mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
+            # for stream in mediastreamarray:
+            #
+            #     item = (
+            #         show_id,
+            #         stream['_quality'],
+            #         stream['_stream'],
+            #     )
+            #
+            #     DL_show_links.insertLink(con, item)
 
         return True
+
+    def getTag(self, title):
+        if self._core == coreEnum.HARTABERFAIR:
+            if '(mit Gebärdensprache)' in title:
+                return tagEnum.SIGNLANGUAGE
+        elif self._core == coreEnum.INASNACHT:
+            if 'Musik bei Inas Nacht:' in title:
+                return tagEnum.MUSICCLIP
+        elif self._core == coreEnum.ROCKPALAST:
+            if 'Unplugged:' in title:
+                return tagEnum.UNPLUGGED
+            elif 'Live-Preview:' in title:
+                return tagEnum.LIVEPREVIEW
+            elif 'Interview' in title:
+                return tagEnum.INTERVIEW
+
+        return tagEnum.NONE
+
+

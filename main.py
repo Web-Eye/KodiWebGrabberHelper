@@ -4,8 +4,9 @@ from libs.common.PIDhandler import PIDhandler
 import sys
 from os import _exit
 
-from libs.common.enums import cores
+from libs.common.enums import coreEnum
 from libs.core.ardmediathekCore import ardmediathekCore
+from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig
 
@@ -17,7 +18,7 @@ def doHartAberFair(config):
     core = None
 
     try:
-        core = ardmediathekCore(cores.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config)
+        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config)
         core.run()
 
     except KeyboardInterrupt:
@@ -36,7 +37,7 @@ def doInasNacht(config):
     core = None
 
     try:
-        core = ardmediathekCore(cores.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config)
+        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config)
         core.run()
 
     except KeyboardInterrupt:
@@ -55,7 +56,7 @@ def doRockpalast(config):
     core = None
 
     try:
-        core = ardmediathekCore(cores.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config)
+        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config)
         core.run()
 
     except KeyboardInterrupt:
@@ -74,7 +75,7 @@ def doHDTrailers(config):
     core = None
 
     try:
-        core = hdtrailersCore(cores.HDTRAILERS, config)
+        core = hdtrailersCore(coreEnum.HDTRAILERS, config)
         core.run()
 
     except KeyboardInterrupt:
@@ -133,6 +134,11 @@ def main():
     config = LoadConfig()
     if not isValidConfig(config):
         print('invalid config')
+        sys.exit()
+
+    db = databaseCore(config)
+    if not db.check_database():
+        print('unable to check database')
         sys.exit()
 
     template = args.template

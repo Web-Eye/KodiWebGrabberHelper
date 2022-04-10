@@ -4,6 +4,16 @@ import mariadb
 class databaseHelper:
 
     @staticmethod
+    def getConnection(config, database_name=None):
+        return mariadb.connect(
+            host=config['host'],
+            port=config['port'],
+            user=config['user'],
+            password=config['password'],
+            database=database_name
+        )
+
+    @staticmethod
     def executeScalar(con, query, parameters=None):
         retValue = None
 
@@ -55,8 +65,8 @@ class databaseHelper:
 
     @staticmethod
     def database_exists(con, databasename):
-        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?',
-                                (databasename,))
+        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.SCHEMATA WHERE '
+                                                   'SCHEMA_NAME = ?', (databasename,))
         if result == 1:
             return True
 
@@ -69,8 +79,8 @@ class databaseHelper:
 
     @staticmethod
     def tableExists(con, databasename, tablename):
-        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?',
-                                (databasename, tablename,))
+        result = databaseHelper.executeScalar(con, 'SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA '
+                                                   '= ? AND TABLE_NAME = ?', (databasename, tablename,))
         if result == 1:
             return True
 
