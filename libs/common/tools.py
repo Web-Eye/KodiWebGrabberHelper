@@ -41,6 +41,11 @@ def ReadConfig(filename):
     return None
 
 
+def SaveConfig(filename, json_data):
+    with open(filename, 'w') as outfile:
+        json.dump(json_data, outfile, indent=4)
+
+
 def getDateTime(strDateTime, strFormat):
     if strDateTime is not None:
         return datetime(*(time.strptime(strDateTime, strFormat)[0:6]))

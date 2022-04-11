@@ -1,5 +1,4 @@
 import argparse
-
 from libs.common.PIDhandler import PIDhandler
 import sys
 from os import _exit
@@ -8,7 +7,7 @@ from libs.common.enums import coreEnum
 from libs.core.ardmediathekCore import ardmediathekCore
 from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
-from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig
+from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
 
 def doHartAberFair(config):
@@ -91,6 +90,29 @@ def doNothing(config):
     pass
 
 
+def doInputConfig():
+    host = input('Enter the MariDB host (localhost): ')
+    port = input('Enter the MariaDB port (3306): ')
+    user = input('Enter the MariaDB username: ')
+    password = input('Enter the users password: ')
+
+    if host == '':
+        host = 'localhost'
+
+    if port == '':
+        port = '3306'
+
+    configFile = GetConfigFile()
+    config = {
+        'host': host,
+        'port': int(port),
+        'user': user,
+        'password': password
+    }
+
+    SaveConfig(configFile, config)
+
+
 def LoadConfig():
     configFile = GetConfigFile()
     return ReadConfig(configFile)
@@ -126,10 +148,16 @@ def main():
                         help='Accepts any of these values: hartaberfair, inasnacht, rockpalast, hdtrailers',
                         choices=['hartaberfair', 'inasnacht', 'rockpalast', 'hdtrailers'])
 
+    parser.add_argument('-c', '--config',
+                        action='store_true')
+
     try:
         args = parser.parse_args()
     except SystemExit:
         sys.exit()
+
+    if args.config:
+        doInputConfig()
 
     config = LoadConfig()
     if not isValidConfig(config):
