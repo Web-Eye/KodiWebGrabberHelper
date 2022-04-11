@@ -77,7 +77,7 @@ class databaseCore:
             statement = 'CREATE TABLE IF NOT EXISTS sub_items (' \
                         '   subItem_id INT NOT NULL AUTO_INCREMENT,' \
                         '   item_id INT NOT NULL,' \
-                        '   title VARCHAR(255) NOT NULL,' \
+                        '   title VARCHAR(255),' \
                         '   tag ENUM (\'NONE\', \'TRAILER\', \'TEASER\', \'CLIP\') NOT NULL,' \
                         '   broadcastOn_date DATETIME,' \
                         '   availableTo_date DATETIME ,' \
@@ -87,16 +87,23 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
+            statement = 'CREATE INDEX idxSIitem_id ON sub_items (item_id);'
+            databaseHelper.executeNonQuery(con, statement)
+
             statement = 'CREATE TABLE IF NOT EXISTS links (' \
                         '   link_id INT NOT NULL AUTO_INCREMENT,' \
                         '   subItem_id INT NOT NULL,' \
                         '   quality ENUM (\'270p\', \'360p\', \'480p\', \'540p\', \'720p\', \'1080p\') NOT NULL,' \
+                        '   best_quality BIT,' \
                         '   hoster VARCHAR(64),' \
                         '   size INT,' \
                         '   URL VARCHAR(255) NOT NULL,' \
                         '   PRIMARY KEY (`link_id`)' \
                         ');'
 
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'CREATE INDEX idxLsubItem_id ON links (subItem_id);'
             databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TABLE IF NOT EXISTS lists (' \
@@ -110,12 +117,52 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
+            statement = 'CREATE INDEX idxLitem_id ON lists (item_id);'
+            databaseHelper.executeNonQuery(con, statement)
+
             statement = 'CREATE TABLE IF NOT EXISTS settings (' \
                         '   setting_id INT NOT NULL AUTO_INCREMENT,' \
                         '   name VARCHAR(100),' \
                         '   value VARCHAR(100),' \
                         '   PRIMARY KEY (setting_id)' \
                         ');'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'CREATE VIEW viewItems AS' \
+                        '   SELECT ' \
+                        '      i.project, i.title, i.plot, i.tag, i.poster_url, si.title AS si_title,' \
+                        '      si.tag AS si_tag, si.broadcastOn_date, si.availableTo_date, si.duration, li.quality, ' \
+                        '      li.best_quality, li.hoster, li.size, li.url  FROM ' \
+                        '         items AS i' \
+                        '         LEFT JOIN sub_items AS si ON i.item_id = si.item_id' \
+                        '         LEFT JOIN links AS li ON si.subItem_id = li.subItem_id' \
+                        '' \
+                        '   ORDER BY i.order_date DESC, si.broadcastOn_date DESC;'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'CREATE TRIGGER `trgDeleteItem` AFTER DELETE ON `items` FOR EACH ROW BEGIN' \
+                        '   DELETE FROM sub_items WHERE sub_items.item_id = OLD.item_id;' \
+                        '   DELETE FROM lists WHERE lists.item_id = OLD.item_id;' \
+                        'END'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'CREATE TRIGGER `trgDeleteSubItem` AFTER DELETE ON `sub_items` FOR EACH ROW BEGIN' \
+                        '   DELETE FROM links WHERE links.subItem_id = OLD.subItem_id;' \
+                        '	IF (SELECT COUNT(*) FROM sub_items WHERE sub_items.item_id = OLD.item_id) = 0 THEN' \
+                        '      DELETE FROM items WHERE items.item_id = OLD.item_id;' \
+                        '	END IF;' \
+                        'END'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'CREATE TRIGGER `trgDeleteLink` AFTER DELETE ON `links` FOR EACH ROW BEGIN' \
+                        '   IF (SELECT COUNT(*) FROM links WHERE links.subItem_id = OLD.subItem_id) = 0 THEN' \
+                        '      DELETE FROM sub_items WHERE sub_items.subItem_id = OLD.subItem_id;' \
+                        '   END IF;' \
+                        'END'
 
             databaseHelper.executeNonQuery(con, statement)
 

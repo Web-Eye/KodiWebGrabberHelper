@@ -1,9 +1,11 @@
 import json
+from urllib.parse import urlparse
 
 import requests
 
 from libs.common import tools
 from libs.common.enums import tagEnum, coreEnum, subItemTagEnum
+from libs.core.Datalayer.DL_links import DL_links
 from libs.core.Datalayer.DL_items import DL_items
 from libs.core.Datalayer.DL_subItems import DL_subItems
 from libs.core.databaseCore import databaseCore
@@ -71,49 +73,51 @@ class ardmediathekCore:
 
             title = show['longTitle']
             widget = content['widgets'][0]
+            best_quality = -1
 
-            item = (
-                self._core.name,
-                identifier,
-                title,
-                widget['synopsis'],
-                self.getTag(title).name,
-                show['images']['aspect16x9']['src'],
-                tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
-            )
+            mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
+            if mediastreamarray is not None and len(mediastreamarray) > 0:
+                best_quality = self.getBestQuality(mediastreamarray)
 
-            item_id = DL_items.insertItem(con, item)
+            if best_quality > -1:
 
-            item = (
-                item_id,
-                title,
-                subItemTagEnum.NONE.name,
-                tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
-                tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
-                show['duration'],
-            )
+                item = (
+                    self._core.name,
+                    identifier,
+                    title,
+                    widget['synopsis'],
+                    self.getTag(title).name,
+                    show['images']['aspect16x9']['src'],
+                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
+                )
 
-            subItem_id = DL_subItems.insertItem(con, item)
+                item_id = DL_items.insertItem(con, item)
 
-            ## TODO save links
+                item = (
+                    item_id,
+                    None,
+                    subItemTagEnum.NONE.name,
+                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                    tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                    show['duration'],
+                )
 
-            ## _quality: 0 --> 270p
-            ## _quality: 1 --> 360p
-            ## _quality: 2 --> 540p
-            ## _quality: 3 --> 720p
-            ## _quality: 4 --> 1080p
-            ## _quality: 'auto' --> skip
+                subItem_id = DL_subItems.insertItem(con, item)
 
-            # mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
-            # for stream in mediastreamarray:
-            #
-            #     item = (
-            #         show_id,
-            #         stream['_quality'],
-            #         stream['_stream'],
-            #     )
-            #
-            #     DL_show_links.insertLink(con, item)
+                for stream in mediastreamarray:
+
+                    quality = self.getQuality(stream['_quality'])
+                    if quality is not None:
+                        item = (
+                            subItem_id,
+                            quality,
+                            best_quality == stream['_quality'],
+                            self.getHoster(stream['_stream']),
+                            None,
+                            stream['_stream'],
+                        )
+
+                        DL_links.insertLink(con, item)
 
         return True
 
@@ -134,4 +138,27 @@ class ardmediathekCore:
 
         return tagEnum.NONE
 
+    def getBestQuality(self, mediastreamarray):
+        li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
+        if li is not None and len(li) > 0:
+            return max(li, key=lambda p: int(p['_quality']))['_quality']
 
+        return -1
+
+    def getQuality(self, quality):
+        if quality == 0:
+            return '270p'
+        elif quality == 1:
+            return '360p'
+        elif quality == 2:
+            return '540p'
+        elif quality == 3:
+            return '720p'
+        elif quality == 4:
+            return '1080p'
+
+        return None
+
+    def getHoster(self, url):
+        o = urlparse(url)
+        return o.hostname

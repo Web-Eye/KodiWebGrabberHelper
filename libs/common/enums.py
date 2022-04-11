@@ -24,15 +24,6 @@ class subItemTagEnum(Enum):
     CLIP = 3
 
 
-class qualityEnum(Enum):
-    _270p = 1
-    _360p = 2
-    _480p = 3
-    _540p = 4
-    _720p = 5
-    _1080p = 6
-
-
 class listEnum(Enum):
     HDT_MOSTWATCHEDWEEK = 1
     HDT_MOSTWATCHEDTODAY = 2
