@@ -31,19 +31,21 @@ class ardmediathekCore:
         pagesize = 48
         totalelements = 1
 
+        requests_session = requests.Session()
+
         while totalelements > (pagenumber * pagesize):
 
             url = self._baseurl
             url = url.replace('{pageNumber}', str(pagenumber))
             url = url.replace('{pageSize}', str(pagesize))
 
-            page = requests.get(url)
+            page = requests_session.get(url)
             content = json.loads(page.content)
             if content is None:
                 break
 
             shows = content['teasers']
-            if not self.getShows(con, shows):
+            if not self.getShows(con, requests_session, shows):
                 break
 
             pagination = content['pagination']
@@ -55,7 +57,7 @@ class ardmediathekCore:
 
         con.close()
 
-    def getShows(self, con, shows):
+    def getShows(self, con, requests_session, shows):
 
         if shows is None:
             return False
@@ -66,7 +68,7 @@ class ardmediathekCore:
                 return False
 
             detail_url = show['links']['target']['href']
-            page = requests.get(detail_url)
+            page = requests_session.get(detail_url)
             content = json.loads(page.content)
             if content is None:
                 return False
@@ -84,6 +86,7 @@ class ardmediathekCore:
                 item = (
                     self._core.name,
                     identifier,
+                    None,
                     title,
                     widget['synopsis'],
                     self.getTag(title).name,
