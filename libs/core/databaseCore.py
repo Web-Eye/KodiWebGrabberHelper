@@ -63,6 +63,7 @@ class databaseCore:
                         '   item_id INT NOT NULL AUTO_INCREMENT,' \
                         '   project ENUM(\'HARTABERFAIR\', \'INASNACHT\', \'ROCKPALAST\', \'HDTRAILERS\') NOT NULL,' \
                         '   identifier VARCHAR(128) NOT NULL,' \
+                        '   hash BINARY(16),' \
                         '   title VARCHAR(255) NOT NULL,' \
                         '   plot VARCHAR(4096),' \
                         '   tag ENUM(\'NONE\', \'SIGNLANGUAGE\', \'MUSICCLIP\', \'INTERVIEW\', \'UNPLUGGED\', ' \
