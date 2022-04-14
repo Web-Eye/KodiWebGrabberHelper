@@ -11,9 +11,33 @@ class DL_items:
 
     @staticmethod
     def insertItem(con, item):
-        statement = 'INSERT INTO items (project, identifier, title, plot, tag, poster_url, order_date) VALUES ' \
-                    '(?, ?, ?, ?, ?, ?, ?);'
+        statement = 'INSERT INTO items (project, identifier, hash, title, plot, tag, poster_url, order_date) VALUES ' \
+                    '(?, ?, UNHEX(?), ?, ?, ?, ?, ?);'
 
         rowCount, item_id = databaseHelper.executeNonQuery(con, statement, item)
         return item_id
+
+    @staticmethod
+    def getItem(con, project, identifier, _hash=None):
+
+        cursor = None
+        if _hash is None:
+            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
+                                                       'identifier = ?', (project, identifier, ))
+
+        else:
+            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
+                                                       'identifier = ? AND hash = ?', (project, identifier, _hash,))
+
+        row = cursor.fetchone()
+        if row is not None:
+
+            item = (
+                row[0],
+                row[1].lower()
+            )
+
+            return item
+
+        return None
 
