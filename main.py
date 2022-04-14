@@ -9,6 +9,9 @@ from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
+__VERSION__ = '1.0.0'
+__VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
+
 
 def doHartAberFair(config):
     pidfile = GetPIDFile("HartAberFair.pid")
@@ -151,10 +154,16 @@ def main():
     parser.add_argument('-c', '--config',
                         action='store_true')
 
+    parser.add_argument('-v', '--version',
+                        action='store_true')
+
     try:
         args = parser.parse_args()
     except SystemExit:
         sys.exit()
+
+    if args.version:
+        print(__VERSIONSTRING__)
 
     if args.config:
         doInputConfig()
