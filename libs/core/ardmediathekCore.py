@@ -12,6 +12,34 @@ from libs.core.databaseCore import databaseCore
 from libs.core.databaseHelper import databaseHelper
 
 
+def _getBestQuality(mediastreamarray):
+    li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
+    if li is not None and len(li) > 0:
+        return max(li, key=lambda p: int(p['_quality']))['_quality']
+
+    return -1
+
+
+def _getQuality(quality):
+    if quality == 0:
+        return '270p'
+    elif quality == 1:
+        return '360p'
+    elif quality == 2:
+        return '540p'
+    elif quality == 3:
+        return '720p'
+    elif quality == 4:
+        return '1080p'
+
+    return None
+
+
+def _getHoster(url):
+    o = urlparse(url)
+    return o.hostname
+
+
 class ardmediathekCore:
 
     def __init__(self, core, channel, mediathek_id, config):
@@ -79,7 +107,7 @@ class ardmediathekCore:
 
             mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
             if mediastreamarray is not None and len(mediastreamarray) > 0:
-                best_quality = self.getBestQuality(mediastreamarray)
+                best_quality = _getBestQuality(mediastreamarray)
 
             if best_quality > -1:
 
@@ -109,13 +137,13 @@ class ardmediathekCore:
 
                 for stream in mediastreamarray:
 
-                    quality = self.getQuality(stream['_quality'])
+                    quality = _getQuality(stream['_quality'])
                     if quality is not None:
                         item = (
                             subItem_id,
                             quality,
                             best_quality == stream['_quality'],
-                            self.getHoster(stream['_stream']),
+                            _getHoster(stream['_stream']),
                             None,
                             stream['_stream'],
                         )
@@ -141,27 +169,4 @@ class ardmediathekCore:
 
         return tagEnum.NONE
 
-    def getBestQuality(self, mediastreamarray):
-        li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
-        if li is not None and len(li) > 0:
-            return max(li, key=lambda p: int(p['_quality']))['_quality']
 
-        return -1
-
-    def getQuality(self, quality):
-        if quality == 0:
-            return '270p'
-        elif quality == 1:
-            return '360p'
-        elif quality == 2:
-            return '540p'
-        elif quality == 3:
-            return '720p'
-        elif quality == 4:
-            return '1080p'
-
-        return None
-
-    def getHoster(self, url):
-        o = urlparse(url)
-        return o.hostname
