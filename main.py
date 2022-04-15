@@ -13,14 +13,14 @@ __VERSION__ = '1.0.0'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
-def doHartAberFair(config):
+def doHartAberFair(config, verbose):
     pidfile = GetPIDFile("HartAberFair.pid")
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config)
+        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config, verbose)
         core.run()
 
     except KeyboardInterrupt:
@@ -32,14 +32,14 @@ def doHartAberFair(config):
     _exit(1)
 
 
-def doInasNacht(config):
+def doInasNacht(config, verbose):
     pidfile = "InasNacht.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config)
+        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config, verbose)
         core.run()
 
     except KeyboardInterrupt:
@@ -51,14 +51,14 @@ def doInasNacht(config):
     _exit(1)
 
 
-def doRockpalast(config):
+def doRockpalast(config, verbose):
     pidfile = "Rockpalast.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config)
+        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config, verbose)
         core.run()
 
     except KeyboardInterrupt:
@@ -70,14 +70,14 @@ def doRockpalast(config):
     _exit(1)
 
 
-def doHDTrailers(config):
+def doHDTrailers(config, verbose):
     pidfile = "HDTrailers.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = hdtrailersCore(coreEnum.HDTRAILERS, config)
+        core = hdtrailersCore(coreEnum.HDTRAILERS, config, verbose)
         core.run()
 
     except KeyboardInterrupt:
@@ -89,7 +89,7 @@ def doHDTrailers(config):
     _exit(1)
 
 
-def doNothing(config):
+def doNothing(config, verbose):
     pass
 
 
@@ -157,6 +157,9 @@ def main():
     parser.add_argument('-v', '--version',
                         action='store_true')
 
+    parser.add_argument('--verbose',
+                        action='store_true')
+
     try:
         args = parser.parse_args()
     except SystemExit:
@@ -186,7 +189,7 @@ def main():
         'rockpalast': doRockpalast,
         'hdtrailers': doHDTrailers,
         None: doNothing
-    }[template](config)
+    }[template](config, args.verbose)
 
 
 if __name__ == '__main__':

@@ -8,11 +8,11 @@ class DL_subItems:
         statement = 'INSERT INTO sub_items (item_id, title, tag, broadcastOn_date, availableTo_date, duration) ' \
                     'VALUES (?, ?, ?, ?, ?, ?);'
 
-        rowCount, item_id = databaseHelper.executeNonQuery(con, statement, item)
-        return item_id
+        return databaseHelper.executeNonQuery(con, statement, item)
 
     @staticmethod
     def deleteSubItemByItemId(con, item_id):
         statement = 'DELETE FROM sub_items WHERE item_id = ?'
-        databaseHelper.executeNonQuery(con, statement, (item_id,))
+        row_count, _id = databaseHelper.executeNonQuery(con, statement, (item_id,))
+        return row_count
 

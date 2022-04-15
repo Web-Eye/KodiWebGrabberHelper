@@ -14,8 +14,8 @@ class DL_items:
         statement = 'INSERT INTO items (project, identifier, hash, title, plot, tag, poster_url, order_date) VALUES ' \
                     '(?, ?, UNHEX(?), ?, ?, ?, ?, ?);'
 
-        rowCount, item_id = databaseHelper.executeNonQuery(con, statement, item)
-        return item_id
+        return databaseHelper.executeNonQuery(con, statement, item)
+
 
     @staticmethod
     def getItem(con, project, identifier, _hash=None):
@@ -54,7 +54,8 @@ class DL_items:
                     '   WHERE item_id = ?'
 
         item = item + (item_id,)
-        databaseHelper.executeNonQuery(con, statement, item)
+        row_count, _id = databaseHelper.executeNonQuery(con, statement, item)
+        return row_count
 
     @staticmethod
     def deleteExpiredItems(con, project):
@@ -64,6 +65,7 @@ class DL_items:
                     '   WHERE project = ? AND si.availableTo_date < NOW()' \
                     ');'
 
-        databaseHelper.executeNonQuery(con, statement, (project,))
+        row_count, _id = databaseHelper.executeNonQuery(con, statement, (project,))
+        return row_count
 
 

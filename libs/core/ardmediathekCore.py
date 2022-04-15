@@ -36,12 +36,16 @@ def _getQuality(quality):
 
 class ardmediathekCore:
 
-    def __init__(self, core, channel, mediathek_id, config):
+    def __init__(self, core, channel, mediathek_id, config, verbose):
         self._core = core
         self._channel = channel
         self._mediathek_id = mediathek_id
         self._config = config
+        self._verbose = verbose
         self._con = None
+
+        self._addedShows = 0
+        self._deletedShows = 0
 
         self._baseurl = f'https://api.ardmediathek.de/page-gateway/widgets/{channel}/asset/{mediathek_id}' \
                         '?pageNumber={pageNumber}&pageSize={pageSize}&embedded=true&seasoned=false&seasonNumber=' \
@@ -56,8 +60,12 @@ class ardmediathekCore:
 
         self._con.close()
 
+        if self._verbose:
+            print(f'Added Shows: {self._addedShows}')
+            print(f'Deleted Shows: {self._deletedShows}')
+
     def _deleteExpiredShows(self):
-        DL_items.deleteExpiredItems(self._con, self._core.name)
+        self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core.name)
 
     def _getLatestShows(self):
         pagenumber = 0
@@ -125,7 +133,8 @@ class ardmediathekCore:
                     tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
                 )
 
-                item_id = DL_items.insertItem(self._con, item)
+                row_count, item_id = DL_items.insertItem(self._con, item)
+                self._addedShows += row_count
 
                 item = (
                     item_id,
@@ -136,7 +145,7 @@ class ardmediathekCore:
                     show['duration'],
                 )
 
-                subItem_id = DL_subItems.insertSubItem(self._con, item)
+                row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)
 
                 for stream in mediastreamarray:
 

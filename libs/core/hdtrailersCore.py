@@ -200,11 +200,19 @@ def _getList(item):
 
 class hdtrailersCore:
 
-    def __init__(self, core, config):
+    def __init__(self, core, config, verbose):
         self._core = core
         self._config = config
+        self._verbose = verbose
         self._con = None
         self._requests_session = None
+
+        self._addedShows = 0
+        self._editedShows = 0
+        self._addedTrailers = 0
+        self._deletedTrailers = 0
+        self._addedListItems = 0
+        self._deletedListItems = 0
 
         self._baseurl = 'http://www.hd-trailers.net/'
 
@@ -218,6 +226,12 @@ class hdtrailersCore:
             self._getList(url)
 
         self._con.close()
+
+        if self._verbose:
+            print(f'Added Shows: {self._addedShows}')
+            print(f'Edited Shows: {self._editedShows}')
+            print(f'Added Trailers: {self._addedTrailers}')
+            print(f'Deleted Trailers: {self._deletedTrailers}')
 
     def _getContent(self, url):
         url = urllib.parse.urljoin(self._baseurl, url)
@@ -244,7 +258,7 @@ class hdtrailersCore:
                 for trItem in trItems:
                     if trItem.find('th', class_='mainHeading'):
                         lst = _getList(trItem)
-                        DL_lists.deleteList(self._con, lst.name)
+                        self._deletedListItems += DL_lists.deleteList(self._con, lst.name)
                         count = 0
 
                     elif lst is not None:
@@ -263,7 +277,7 @@ class hdtrailersCore:
                                         item[0],
                                         count
                                     )
-                                    DL_lists.insertList(self._con, listItem)
+                                    self._addedListItems += DL_lists.insertList(self._con, listItem)
 
     def _parseLatestSite(self, url):
         _hash, content = self._getContent(url)
@@ -302,7 +316,7 @@ class hdtrailersCore:
 
                 else:
                     item_id = movie[0]
-                    DL_subItems.deleteSubItemByItemId(self._con, item_id)
+                    self._deletedTrailers += DL_subItems.deleteSubItemByItemId(self._con, item_id)
 
                     self._updateMovie(item_id, _movie)
                     self._insertTrailers(item_id, _movie['trailers'])
@@ -321,7 +335,9 @@ class hdtrailersCore:
             tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
         )
 
-        return DL_items.insertItem(self._con, item)
+        row_count, item_id = DL_items.insertItem(self._con, item)
+        self._addedShows += row_count
+        return item_id
 
     def _updateMovie(self, item_id, movie):
         item = (
@@ -333,7 +349,7 @@ class hdtrailersCore:
             tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
         )
 
-        DL_items.updateItem(self._con, item_id, item)
+        self._editedShows += DL_items.updateItem(self._con, item_id, item)
 
     def _insertTrailers(self, item_id, trailers):
         for trailer in trailers:
@@ -346,7 +362,8 @@ class hdtrailersCore:
                 None
             )
 
-            subItem_id = DL_subItems.insertSubItem(self._con, item)
+            row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)
+            self._addedTrailers += row_count
 
             for link in trailer['links']:
                 item = (
