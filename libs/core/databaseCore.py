@@ -151,7 +151,7 @@ class databaseCore:
             databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TRIGGER `trgDeleteSubItem` AFTER DELETE ON `sub_items` FOR EACH ROW BEGIN' \
-                        '   DELETE FROM links WHERE links.subItem_id = OLD.subItem_id;' \                       
+                        '   DELETE FROM links WHERE links.subItem_id = OLD.subItem_id;' \
                         'END'
 
             databaseHelper.executeNonQuery(con, statement)
