@@ -26,7 +26,8 @@ class DL_items:
 
         else:
             cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
-                                                       'identifier = ? AND hash = ?', (project, identifier, _hash,))
+                                                       'identifier = ? AND hash = UNHEX(?)',
+                                                  (project, identifier, _hash,))
 
         row = cursor.fetchone()
         if row is not None:

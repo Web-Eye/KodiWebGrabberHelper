@@ -9,9 +9,10 @@ import hashlib
 from decimal import Decimal, InvalidOperation
 
 from libs.common import tools
-from libs.common.enums import tagEnum, subItemTagEnum
+from libs.common.enums import tagEnum, subItemTagEnum, listEnum
 from libs.core.Datalayer.DL_items import DL_items
 from libs.core.Datalayer.DL_links import DL_links
+from libs.core.Datalayer.DL_lists import DL_lists
 from libs.core.Datalayer.DL_subItems import DL_subItems
 from libs.core.databaseCore import databaseCore
 from libs.core.databaseHelper import databaseHelper
@@ -180,58 +181,21 @@ def _getMovieDetails(movie_id, _hash, content):
             }
 
 
-def _insertMovie(con, core, movie):
-    item = (
-        core.name,
-        movie['movie_id'],
-        movie['hash'],
-        movie['title'],
-        movie['plot'],
-        tagEnum.NONE.name,
-        movie['poster'],
-        tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
-    )
+def _getList(item):
+    t = item.find(lambda tag: tag.name == 'div')
+    if t is not None:
+        tagText = t.getText()
 
-    return DL_items.insertItem(con, item)
-
-
-def _updateMovie(con, item_id, movie):
-    item = (
-        movie['hash'],
-        movie['title'],
-        movie['plot'],
-        tagEnum.NONE.name,
-        movie['poster'],
-        tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
-    )
-
-    DL_items.updateItem(con, item_id, item)
-
-
-def _insertTrailers(con, item_id, trailers):
-    for trailer in trailers:
-        item = (
-            item_id,
-            trailer['name'],
-            trailer['type'].name,
-            tools.datetimeToString(trailer['date'], '%Y-%m-%d %H:%M:%S'),
-            None,
-            None
-        )
-
-        subItem_id = DL_subItems.insertSubItem(con, item)
-
-        for link in trailer['links']:
-            item = (
-                subItem_id,
-                link['quality'],
-                link['best_quality'],
-                tools.getHoster(link['url']),
-                link['size'],
-                link['url'],
-            )
-
-            DL_links.insertLink(con, item)
+        if 'Most Watched Trailers This Week' == tagText:
+            return listEnum.HDT_MOSTWATCHEDWEEK
+        elif 'Most Watched Trailers Today' == tagText:
+            return listEnum.HDT_MOSTWATCHEDTODAY
+        elif 'Box Office Top 10 Movies' == tagText:
+            return listEnum.HDT_TOPTEN
+        elif 'Opening This Week' == tagText:
+            return listEnum.HDT_OPENING
+        elif 'Coming Soon' == tagText:
+            return listEnum.HDT_COMINGSOON
 
 
 class hdtrailersCore:
@@ -239,39 +203,77 @@ class hdtrailersCore:
     def __init__(self, core, config):
         self._core = core
         self._config = config
+        self._con = None
+        self._requests_session = None
 
         self._baseurl = 'http://www.hd-trailers.net/'
 
     def run(self):
 
-        con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
-        requests_session = requests.Session()
-        self.getLatest(con, requests_session)
+        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._requests_session = requests.Session()
+        self.getLatest()
 
-        con.close()
+        for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
+            self.getList(url)
 
-    def getContent(self, requests_session, url):
+        self._con.close()
+
+    def getContent(self, url):
         url = urllib.parse.urljoin(self._baseurl, url)
-        page = requests_session.get(url)
+        page = self._requests_session.get(url)
         _hash = hashlib.md5(page.content).hexdigest()
         content = BeautifulSoup(page.content, 'lxml')
         return _hash, content
 
-    def getLatest(self, con, requests_session):
+    def getLatest(self):
         url = '/page/1/'
 
         while url is not None:
-            url = self.parseLatestSite(con, requests_session, url)
+            url = self.parseLatestSite(url)
 
-    def parseLatestSite(self, con, requests_session, url):
-        _hash, content = self.getContent(requests_session, url)
+    def getList(self, url):
+        _hash, content = self.getContent(url)
+
+        indexTable = content.find('table', class_='indexTable')
+        if indexTable is not None:
+            trItems = indexTable.find_all(lambda tag: tag.name == 'tr')
+            if trItems is not None:
+                lst = None
+                count = 0
+                for trItem in trItems:
+                    if trItem.find('th', class_='mainHeading'):
+                        lst = _getList(trItem)
+                        DL_lists.deleteList(self._con, lst.name)
+                        count = 0
+
+                    elif lst is not None:
+                        items = trItem.find_all('td', class_='indexTableTrailerImage')
+                        if items is not None:
+                            for item in items:
+                                link = item.find('a')
+                                url = link['href']
+                                _hash, _content = self.getContent(url)
+                                movie_id = _getMovieId(_content)
+                                item = DL_items.getItem(self._con, self._core.name, str(movie_id), _hash)
+                                if item is not None:
+                                    count += 1
+                                    listItem = (
+                                        lst.name,
+                                        item[0],
+                                        count
+                                    )
+                                    DL_lists.insertList(self._con, listItem)
+
+    def parseLatestSite(self, url):
+        _hash, content = self.getContent(url)
 
         items = content.find_all('td', class_='indexTableTrailerImage')
         if items is not None:
             for item in items:
                 link = item.find('a')
                 if link is not None:
-                    if not self.parseMovieSite(con, requests_session, link['href']):
+                    if not self.parseMovieSite(link['href']):
                         return None
 
         navigation = content.find('div', class_='libraryLinks nav-links-top')
@@ -283,27 +285,78 @@ class hdtrailersCore:
 
         return None
 
-    def parseMovieSite(self, con, requests_session, url):
+    def parseMovieSite(self, url):
         if url is not None:
-            _hash, content = self.getContent(requests_session, url)
+            _hash, content = self.getContent(url)
 
             movie_id = _getMovieId(content)
-            movie = DL_items.getItem(con, self._core.name, str(movie_id))
+            movie = DL_items.getItem(self._con, self._core.name, str(movie_id))
             if movie is not None and movie[1] == _hash:
                 return False
 
             _movie = _getMovieDetails(movie_id, _hash, content)
             if _movie is not None:
                 if movie is None:
-                    item_id = _insertMovie(con, self._core, _movie)
-                    _insertTrailers(con, item_id, _movie['trailers'])
+                    item_id = self.insertMovie(_movie)
+                    self.insertTrailers(item_id, _movie['trailers'])
 
                 else:
                     item_id = movie[0]
-                    DL_subItems.deleteSubItemByItemId(con, item_id)
+                    DL_subItems.deleteSubItemByItemId(self._con, item_id)
 
-                    _updateMovie(con, item_id, _movie)
-                    _insertTrailers(con, item_id, _movie['trailers'])
+                    self.updateMovie(item_id, _movie)
+                    self.insertTrailers(item_id, _movie['trailers'])
 
             return True
+
+    def insertMovie(self, movie):
+        item = (
+            self._core.name,
+            movie['movie_id'],
+            movie['hash'],
+            movie['title'],
+            movie['plot'],
+            tagEnum.NONE.name,
+            movie['poster'],
+            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+        )
+
+        return DL_items.insertItem(self._con, item)
+
+    def updateMovie(self, item_id, movie):
+        item = (
+            movie['hash'],
+            movie['title'],
+            movie['plot'],
+            tagEnum.NONE.name,
+            movie['poster'],
+            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+        )
+
+        DL_items.updateItem(self._con, item_id, item)
+
+    def insertTrailers(self, item_id, trailers):
+        for trailer in trailers:
+            item = (
+                item_id,
+                trailer['name'],
+                trailer['type'].name,
+                tools.datetimeToString(trailer['date'], '%Y-%m-%d %H:%M:%S'),
+                None,
+                None
+            )
+
+            subItem_id = DL_subItems.insertSubItem(self._con, item)
+
+            for link in trailer['links']:
+                item = (
+                    subItem_id,
+                    link['quality'],
+                    link['best_quality'],
+                    tools.getHoster(link['url']),
+                    link['size'],
+                    link['url'],
+                )
+
+                DL_links.insertLink(self._con, item)
 
