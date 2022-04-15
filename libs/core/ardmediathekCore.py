@@ -41,14 +41,25 @@ class ardmediathekCore:
         self._channel = channel
         self._mediathek_id = mediathek_id
         self._config = config
+        self._con = None
+
         self._baseurl = f'https://api.ardmediathek.de/page-gateway/widgets/{channel}/asset/{mediathek_id}' \
                         '?pageNumber={pageNumber}&pageSize={pageSize}&embedded=true&seasoned=false&seasonNumber=' \
                         '&withAudiodescription=false&withOriginalWithSubtitle=false&withOriginalversion=false '
 
     def run(self):
 
-        con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
 
+        self._deleteExpiredShows()
+        self._getLatestShows()
+
+        self._con.close()
+
+    def _deleteExpiredShows(self):
+        DL_items.deleteExpiredItems(self._con, self._core.name)
+
+    def _getLatestShows(self):
         pagenumber = 0
         pagesize = 48
         totalelements = 1
@@ -67,7 +78,7 @@ class ardmediathekCore:
                 break
 
             shows = content['teasers']
-            if not self.getShows(con, requests_session, shows):
+            if not self._getShows(requests_session, shows):
                 break
 
             pagination = content['pagination']
@@ -77,16 +88,14 @@ class ardmediathekCore:
             pagenumber = pagenumber + 1
             totalelements = int(pagination['totalElements'])
 
-        con.close()
-
-    def getShows(self, con, requests_session, shows):
+    def _getShows(self, requests_session, shows):
 
         if shows is None:
             return False
 
         for show in shows:
             identifier = show['id']
-            if DL_items.existsItem(con, self._core.name, identifier):
+            if DL_items.existsItem(self._con, self._core.name, identifier):
                 return False
 
             detail_url = show['links']['target']['href']
@@ -111,12 +120,12 @@ class ardmediathekCore:
                     None,
                     title,
                     widget['synopsis'],
-                    self.getTag(title).name,
+                    self._getTag(title).name,
                     show['images']['aspect16x9']['src'],
                     tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
                 )
 
-                item_id = DL_items.insertItem(con, item)
+                item_id = DL_items.insertItem(self._con, item)
 
                 item = (
                     item_id,
@@ -127,7 +136,7 @@ class ardmediathekCore:
                     show['duration'],
                 )
 
-                subItem_id = DL_subItems.insertSubItem(con, item)
+                subItem_id = DL_subItems.insertSubItem(self._con, item)
 
                 for stream in mediastreamarray:
 
@@ -142,11 +151,11 @@ class ardmediathekCore:
                             stream['_stream'],
                         )
 
-                        DL_links.insertLink(con, item)
+                        DL_links.insertLink(self._con, item)
 
         return True
 
-    def getTag(self, title):
+    def _getTag(self, title):
         if self._core == coreEnum.HARTABERFAIR:
             if '(mit Gebärdensprache)' in title:
                 return tagEnum.SIGNLANGUAGE

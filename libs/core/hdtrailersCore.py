@@ -212,28 +212,28 @@ class hdtrailersCore:
 
         self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
         self._requests_session = requests.Session()
-        self.getLatest()
+        self._getLatest()
 
         for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
-            self.getList(url)
+            self._getList(url)
 
         self._con.close()
 
-    def getContent(self, url):
+    def _getContent(self, url):
         url = urllib.parse.urljoin(self._baseurl, url)
         page = self._requests_session.get(url)
         _hash = hashlib.md5(page.content).hexdigest()
         content = BeautifulSoup(page.content, 'lxml')
         return _hash, content
 
-    def getLatest(self):
+    def _getLatest(self):
         url = '/page/1/'
 
         while url is not None:
-            url = self.parseLatestSite(url)
+            url = self._parseLatestSite(url)
 
-    def getList(self, url):
-        _hash, content = self.getContent(url)
+    def _getList(self, url):
+        _hash, content = self._getContent(url)
 
         indexTable = content.find('table', class_='indexTable')
         if indexTable is not None:
@@ -253,7 +253,7 @@ class hdtrailersCore:
                             for item in items:
                                 link = item.find('a')
                                 url = link['href']
-                                _hash, _content = self.getContent(url)
+                                _hash, _content = self._getContent(url)
                                 movie_id = _getMovieId(_content)
                                 item = DL_items.getItem(self._con, self._core.name, str(movie_id), _hash)
                                 if item is not None:
@@ -265,15 +265,15 @@ class hdtrailersCore:
                                     )
                                     DL_lists.insertList(self._con, listItem)
 
-    def parseLatestSite(self, url):
-        _hash, content = self.getContent(url)
+    def _parseLatestSite(self, url):
+        _hash, content = self._getContent(url)
 
         items = content.find_all('td', class_='indexTableTrailerImage')
         if items is not None:
             for item in items:
                 link = item.find('a')
                 if link is not None:
-                    if not self.parseMovieSite(link['href']):
+                    if not self._parseMovieSite(link['href']):
                         return None
 
         navigation = content.find('div', class_='libraryLinks nav-links-top')
@@ -285,9 +285,9 @@ class hdtrailersCore:
 
         return None
 
-    def parseMovieSite(self, url):
+    def _parseMovieSite(self, url):
         if url is not None:
-            _hash, content = self.getContent(url)
+            _hash, content = self._getContent(url)
 
             movie_id = _getMovieId(content)
             movie = DL_items.getItem(self._con, self._core.name, str(movie_id))
@@ -297,19 +297,19 @@ class hdtrailersCore:
             _movie = _getMovieDetails(movie_id, _hash, content)
             if _movie is not None:
                 if movie is None:
-                    item_id = self.insertMovie(_movie)
-                    self.insertTrailers(item_id, _movie['trailers'])
+                    item_id = self._insertMovie(_movie)
+                    self._insertTrailers(item_id, _movie['trailers'])
 
                 else:
                     item_id = movie[0]
                     DL_subItems.deleteSubItemByItemId(self._con, item_id)
 
-                    self.updateMovie(item_id, _movie)
-                    self.insertTrailers(item_id, _movie['trailers'])
+                    self._updateMovie(item_id, _movie)
+                    self._insertTrailers(item_id, _movie['trailers'])
 
             return True
 
-    def insertMovie(self, movie):
+    def _insertMovie(self, movie):
         item = (
             self._core.name,
             movie['movie_id'],
@@ -323,7 +323,7 @@ class hdtrailersCore:
 
         return DL_items.insertItem(self._con, item)
 
-    def updateMovie(self, item_id, movie):
+    def _updateMovie(self, item_id, movie):
         item = (
             movie['hash'],
             movie['title'],
@@ -335,7 +335,7 @@ class hdtrailersCore:
 
         DL_items.updateItem(self._con, item_id, item)
 
-    def insertTrailers(self, item_id, trailers):
+    def _insertTrailers(self, item_id, trailers):
         for trailer in trailers:
             item = (
                 item_id,
@@ -359,4 +359,3 @@ class hdtrailersCore:
                 )
 
                 DL_links.insertLink(self._con, item)
-

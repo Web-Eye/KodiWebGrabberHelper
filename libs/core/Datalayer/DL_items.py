@@ -56,3 +56,14 @@ class DL_items:
         item = item + (item_id,)
         databaseHelper.executeNonQuery(con, statement, item)
 
+    @staticmethod
+    def deleteExpiredItems(con, project):
+        statement = 'DELETE FROM items WHERE item_id IN (' \
+                    '   SELECT i.item_id FROM items  AS i' \
+                    '   LEFT JOIN sub_items AS si ON i.item_id = si.item_id ' \
+                    '   WHERE project = ? AND si.availableTo_date < NOW()' \
+                    ');'
+
+        databaseHelper.executeNonQuery(con, statement, (project,))
+
+
