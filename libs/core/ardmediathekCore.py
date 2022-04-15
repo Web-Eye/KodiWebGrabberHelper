@@ -1,5 +1,4 @@
 import json
-from urllib.parse import urlparse
 
 import requests
 
@@ -33,11 +32,6 @@ def _getQuality(quality):
         return '1080p'
 
     return None
-
-
-def _getHoster(url):
-    o = urlparse(url)
-    return o.hostname
 
 
 class ardmediathekCore:
@@ -133,7 +127,7 @@ class ardmediathekCore:
                     show['duration'],
                 )
 
-                subItem_id = DL_subItems.insertItem(con, item)
+                subItem_id = DL_subItems.insertSubItem(con, item)
 
                 for stream in mediastreamarray:
 
@@ -143,7 +137,7 @@ class ardmediathekCore:
                             subItem_id,
                             quality,
                             best_quality == stream['_quality'],
-                            _getHoster(stream['_stream']),
+                            tools.getHoster(stream['_stream']),
                             None,
                             stream['_stream'],
                         )
@@ -168,5 +162,3 @@ class ardmediathekCore:
                 return tagEnum.INTERVIEW
 
         return tagEnum.NONE
-
-

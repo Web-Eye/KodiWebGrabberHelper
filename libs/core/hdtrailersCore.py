@@ -9,8 +9,10 @@ import hashlib
 from decimal import Decimal, InvalidOperation
 
 from libs.common import tools
-from libs.common.enums import tagEnum
+from libs.common.enums import tagEnum, subItemTagEnum
 from libs.core.Datalayer.DL_items import DL_items
+from libs.core.Datalayer.DL_links import DL_links
+from libs.core.Datalayer.DL_subItems import DL_subItems
 from libs.core.databaseCore import databaseCore
 from libs.core.databaseHelper import databaseHelper
 
@@ -26,7 +28,13 @@ def _getMovieId(content):
 def _getTrailerType(link):
     trailer_type_block = link.find('h2')
     if trailer_type_block is not None:
-        return trailer_type_block.getText()
+        _type = trailer_type_block.getText()
+        if _type == 'Trailers':
+            return subItemTagEnum.TRAILER
+        elif _type == 'Clips':
+            return subItemTagEnum.CLIP
+
+    return subItemTagEnum.NONE
 
 
 def _getTrailerName(link):
@@ -40,7 +48,7 @@ def _getTrailerName(link):
 def _getTrailerDate(link):
     trailer_date_block = link.find('td', class_='bottomTableDate')
     if trailer_date_block is not None:
-        return trailer_date_block.getText()
+        return tools.getDateTime(trailer_date_block.getText(), '%Y-%m-%d')
 
 
 def _getTrailerLinks(link):
@@ -57,12 +65,13 @@ def _getTrailerLinks(link):
                         'title': a_tag['title'],
                         'quality': a_tag.getText(),
                         'best_quality': False,
+                        'size': None,
                         'url': url
                     }
                 )
 
     if len(link_collection) > 0:
-        link_collection[-1]['best_qulaity'] = True
+        link_collection[-1]['best_quality'] = True
         return link_collection
 
 
@@ -95,6 +104,8 @@ def _getTrailerCollection(content):
     trailer_type = ''
     trailer_name = ''
     trailer_date = ''
+    latest_date = None
+
     i = 0
 
     link_block = content.find('table', class_='bottomTable')
@@ -110,6 +121,7 @@ def _getTrailerCollection(content):
 
         elif link.name == 'tr' and link.has_attr('itemprop') and link['itemprop'] == 'trailer':
             if len(trailer_links) > 0:
+                latest_date = tools.maxDate(trailer_date, latest_date)
                 trailer_collection.append(
                     {
                         'name': trailer_name,
@@ -131,6 +143,7 @@ def _getTrailerCollection(content):
                 i += 1
 
     if len(trailer_links) > 0:
+        latest_date = tools.maxDate(trailer_date, latest_date)
         trailer_collection.append(
             {
                 'name': trailer_name,
@@ -141,10 +154,10 @@ def _getTrailerCollection(content):
         )
 
     if len(trailer_collection) > 0:
-        return trailer_collection
+        return latest_date, trailer_collection
 
 
-def _getMovieDetails(content):
+def _getMovieDetails(movie_id, _hash, content):
     plot = None
     info = content.find('td', class_='topTableInfo')
     if info is not None:
@@ -153,12 +166,72 @@ def _getMovieDetails(content):
         if plot_block is not None:
             plot = plot_block.find('span').getText()
         poster = urllib.parse.urljoin("http:", info.find('img')['src'])
+        latestDate, trailerCollection = _getTrailerCollection(content)
 
-        return {
-            'title': title,
-            'plot': plot,
-            'poster': poster
-        }
+        if trailerCollection is not None and len(trailerCollection) > 0:
+            return {
+                'movie_id': movie_id,
+                'hash': _hash,
+                'title': title,
+                'plot': plot,
+                'poster': poster,
+                'date': latestDate,
+                'trailers': trailerCollection
+            }
+
+
+def _insertMovie(con, core, movie):
+    item = (
+        core.name,
+        movie['movie_id'],
+        movie['hash'],
+        movie['title'],
+        movie['plot'],
+        tagEnum.NONE.name,
+        movie['poster'],
+        tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+    )
+
+    return DL_items.insertItem(con, item)
+
+
+def _updateMovie(con, item_id, movie):
+    item = (
+        movie['hash'],
+        movie['title'],
+        movie['plot'],
+        tagEnum.NONE.name,
+        movie['poster'],
+        tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+    )
+
+    DL_items.updateItem(con, item_id, item)
+
+
+def _insertTrailers(con, item_id, trailers):
+    for trailer in trailers:
+        item = (
+            item_id,
+            trailer['name'],
+            trailer['type'].name,
+            tools.datetimeToString(trailer['date'], '%Y-%m-%d %H:%M:%S'),
+            None,
+            None
+        )
+
+        subItem_id = DL_subItems.insertSubItem(con, item)
+
+        for link in trailer['links']:
+            item = (
+                subItem_id,
+                link['quality'],
+                link['best_quality'],
+                tools.getHoster(link['url']),
+                link['size'],
+                link['url'],
+            )
+
+            DL_links.insertLink(con, item)
 
 
 class hdtrailersCore:
@@ -219,31 +292,18 @@ class hdtrailersCore:
             if movie is not None and movie[1] == _hash:
                 return False
 
-            _movie = _getMovieDetails(content)
+            _movie = _getMovieDetails(movie_id, _hash, content)
             if _movie is not None:
-                trailer_collection = _getTrailerCollection(content)
+                if movie is None:
+                    item_id = _insertMovie(con, self._core, _movie)
+                    _insertTrailers(con, item_id, _movie['trailers'])
 
-                if trailer_collection is not None:
-                    if movie is None:
+                else:
+                    item_id = movie[0]
+                    DL_subItems.deleteSubItemByItemId(con, item_id)
 
-                        item = (
-                            self._core.name,
-                            movie_id,
-                            _hash,
-                            _movie['title'],
-                            _movie['plot'],
-                            tagEnum.NONE.name,
-                            _movie['poster'],
-                            tools.convertDateTime(trailer_collection[0]['date'], '%Y-%m-%d',
-                                                  '%Y-%m-%d %H:%M:%S')
-                        )
-
-                        item_id = DL_items.insertItem(con, item)
-                        print(item_id)
-
-                    else:
-                        pass
+                    _updateMovie(con, item_id, _movie)
+                    _insertTrailers(con, item_id, _movie['trailers'])
 
             return True
-
 

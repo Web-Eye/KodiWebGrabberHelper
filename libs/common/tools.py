@@ -3,6 +3,7 @@ import os.path
 import sys
 import time
 from datetime import datetime
+from urllib.parse import urlparse
 
 
 def GetPIDFile(filename):
@@ -52,6 +53,10 @@ def getDateTime(strDateTime, strFormat):
     return None
 
 
+def datetimeToString(dt, dstFormat):
+    return dt.strftime(dstFormat)
+
+
 def convertDateTime(strDateTime, srcFormat, dstFormat):
     dt = getDateTime(strDateTime, srcFormat)
     if dt is not None:
@@ -59,3 +64,19 @@ def convertDateTime(strDateTime, srcFormat, dstFormat):
 
     return None
 
+
+def maxDate(date1, date2):
+    if date1 is None:
+        return date2
+
+    if date2 is None:
+        return date1
+
+    if date1 > date2:
+        return date1
+
+    return date2
+
+def getHoster(url):
+    o = urlparse(url)
+    return o.hostname

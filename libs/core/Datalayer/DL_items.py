@@ -20,7 +20,6 @@ class DL_items:
     @staticmethod
     def getItem(con, project, identifier, _hash=None):
 
-        cursor = None
         if _hash is None:
             cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
                                                        'identifier = ?', (project, identifier, ))
@@ -40,4 +39,19 @@ class DL_items:
             return item
 
         return None
+
+    @staticmethod
+    def updateItem(con, item_id, item):
+        statement = 'UPDATE items ' \
+                    '   SET' \
+                    '       hash = UNHEX(?)' \
+                    '      ,title = ?' \
+                    '      ,plot = ?' \
+                    '      ,tag = ?' \
+                    '      ,poster_url = ?' \
+                    '      ,order_date = ?' \
+                    '   WHERE item_id = ?'
+
+        item = item + (item_id,)
+        databaseHelper.executeNonQuery(con, statement, item)
 
