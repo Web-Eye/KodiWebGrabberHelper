@@ -49,7 +49,7 @@ class databaseHelper:
         except mariadb.Error as e:
             print(f"Error connecting to MariaDB Platform: {e}")
 
-        return row_count, last_row_id
+        return row_count or 0, last_row_id or 0
 
     @staticmethod
     def executeReader(con, query, parameters=None):
