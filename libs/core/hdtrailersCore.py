@@ -139,7 +139,7 @@ def _getTrailerCollection(content):
 
         elif link.name == 'td' and link.has_attr('class') and link['class'][0] == 'bottomTableFileSize':
             size = _getSize(link.getText())
-            if size is not None:
+            if size is not None and trailer_links is not None and len(trailer_links) > i:
                 trailer_links[i]['size'] = size
                 i += 1
 
