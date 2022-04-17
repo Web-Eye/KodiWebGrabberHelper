@@ -13,7 +13,7 @@ from libs.core.databaseHelper import databaseHelper
 
 def _getBestQuality(mediastreamarray):
     li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
-    if li is not None and len(li) > 0:
+    if tools.getLength(li) > 0:
         return max(li, key=lambda p: int(p['_quality']))['_quality']
 
     return -1
@@ -117,7 +117,7 @@ class ardmediathekCore:
             best_quality = -1
 
             mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
-            if mediastreamarray is not None and len(mediastreamarray) > 0:
+            if tools.getLength(mediastreamarray) > 0:
                 best_quality = _getBestQuality(mediastreamarray)
 
             if best_quality > -1:

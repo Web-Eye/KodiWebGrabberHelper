@@ -71,7 +71,7 @@ def _getTrailerLinks(link):
                     }
                 )
 
-    if len(link_collection) > 0:
+    if tools.getLength(link_collection) > 0:
         link_collection[-1]['best_quality'] = True
         return link_collection
 
@@ -121,7 +121,7 @@ def _getTrailerCollection(content):
             trailer_type = _getTrailerType(link)
 
         elif link.name == 'tr' and link.has_attr('itemprop') and link['itemprop'] == 'trailer':
-            if len(trailer_links) > 0:
+            if tools.getLength(trailer_links) > 0:
                 latest_date = tools.maxDate(trailer_date, latest_date)
                 trailer_collection.append(
                     {
@@ -139,11 +139,11 @@ def _getTrailerCollection(content):
 
         elif link.name == 'td' and link.has_attr('class') and link['class'][0] == 'bottomTableFileSize':
             size = _getSize(link.getText())
-            if size is not None and trailer_links is not None and len(trailer_links) > i:
+            if size is not None and tools.getLength(trailer_links) > i:
                 trailer_links[i]['size'] = size
                 i += 1
 
-    if len(trailer_links) > 0:
+    if tools.getLength(trailer_links) > 0:
         latest_date = tools.maxDate(trailer_date, latest_date)
         trailer_collection.append(
             {
@@ -154,7 +154,7 @@ def _getTrailerCollection(content):
             }
         )
 
-    if len(trailer_collection) > 0:
+    if tools.getLength(trailer_collection) > 0:
         return latest_date, trailer_collection
 
 
@@ -169,7 +169,7 @@ def _getMovieDetails(movie_id, _hash, content):
         poster = urllib.parse.urljoin("http:", info.find('img')['src'])
         latestDate, trailerCollection = _getTrailerCollection(content)
 
-        if trailerCollection is not None and len(trailerCollection) > 0:
+        if tools.getLength(trailerCollection) > 0:
             return {
                 'movie_id': movie_id,
                 'hash': _hash,

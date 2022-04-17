@@ -77,6 +77,15 @@ def maxDate(date1, date2):
 
     return date2
 
+
 def getHoster(url):
     o = urlparse(url)
     return o.hostname
+
+
+def getLength(o):
+    if o is None:
+        return 0
+
+    return len(o)
+
