@@ -36,12 +36,14 @@ def _getQuality(quality):
 
 class ardmediathekCore:
 
-    def __init__(self, core, channel, mediathek_id, config, verbose):
+    def __init__(self, core, channel, mediathek_id, config, addArgs):
         self._core = core
         self._channel = channel
         self._mediathek_id = mediathek_id
         self._config = config
-        self._verbose = verbose
+        self._verbose = addArgs['verbose']
+        self._page_begin = addArgs['page_begin']
+        self._page_count = addArgs['page_count']
         self._con = None
 
         self._addedShows = 0

@@ -13,14 +13,15 @@ __VERSION__ = '1.0.0+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
-def doHartAberFair(config, verbose):
+def doHartAberFair(config, addArgs):
     pidfile = GetPIDFile("HartAberFair.pid")
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config, verbose)
+        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config,
+                                addArgs)
         core.run()
 
     except KeyboardInterrupt:
@@ -32,14 +33,14 @@ def doHartAberFair(config, verbose):
     _exit(1)
 
 
-def doInasNacht(config, verbose):
+def doInasNacht(config, addArgs):
     pidfile = "InasNacht.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config, verbose)
+        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config, addArgs)
         core.run()
 
     except KeyboardInterrupt:
@@ -51,14 +52,14 @@ def doInasNacht(config, verbose):
     _exit(1)
 
 
-def doRockpalast(config, verbose):
+def doRockpalast(config, addArgs):
     pidfile = "Rockpalast.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config, verbose)
+        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config, addArgs)
         core.run()
 
     except KeyboardInterrupt:
@@ -70,14 +71,14 @@ def doRockpalast(config, verbose):
     _exit(1)
 
 
-def doHDTrailers(config, verbose):
+def doHDTrailers(config, addArgs):
     pidfile = "HDTrailers.pid"
     h = PIDhandler(pidfile)
     h.checkPID()
     core = None
 
     try:
-        core = hdtrailersCore(coreEnum.HDTRAILERS, config, verbose)
+        core = hdtrailersCore(coreEnum.HDTRAILERS, config, addArgs)
         core.run()
 
     except KeyboardInterrupt:
@@ -89,7 +90,7 @@ def doHDTrailers(config, verbose):
     _exit(1)
 
 
-def doNothing(config, verbose):
+def doNothing(config, addArgs):
     pass
 
 
@@ -160,6 +161,17 @@ def main():
     parser.add_argument('--verbose',
                         action='store_true')
 
+    parser.add_argument('-p', '--page',
+                        type=int
+                        )
+
+    parser.add_argument('-pc', '--pagecount',
+                        type=int
+                        )
+
+    parser.add_argument('--suppressSkip',
+                        action='store_true')
+
     try:
         args = parser.parse_args()
     except SystemExit:
@@ -181,7 +193,16 @@ def main():
         print('unable to check database')
         sys.exit()
 
+    if args.page is None:
+        args.page = 1
+
     template = args.template
+    addArgs = {
+        'page_begin': args.page,
+        'page_count': args.pagecount,
+        'suppress_skip': args.suppressSkip,
+        'verbose': args.verbose
+    }
 
     {
         'hartaberfair': doHartAberFair,
@@ -189,7 +210,7 @@ def main():
         'rockpalast': doRockpalast,
         'hdtrailers': doHDTrailers,
         None: doNothing
-    }[template](config, args.verbose)
+    }[template](config, addArgs)
 
 
 if __name__ == '__main__':

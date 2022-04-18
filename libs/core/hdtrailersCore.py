@@ -200,10 +200,13 @@ def _getList(item):
 
 class hdtrailersCore:
 
-    def __init__(self, core, config, verbose):
+    def __init__(self, core, config, addArgs):
         self._core = core
         self._config = config
-        self._verbose = verbose
+        self._verbose = addArgs['verbose']
+        self._page_begin = addArgs['page_begin']
+        self._page_count = addArgs['page_count']
+        self._suppressSkip = addArgs['suppress_skip']
         self._con = None
         self._requests_session = None
 
@@ -220,10 +223,9 @@ class hdtrailersCore:
 
         self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
         self._requests_session = requests.Session()
-        self._getLatest()
-
-        for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
-            self._getList(url)
+        if self._getLatest():
+            for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
+                self._getList(url)
 
         self._con.close()
 
@@ -241,10 +243,17 @@ class hdtrailersCore:
         return _hash, content
 
     def _getLatest(self):
-        url = '/page/1/'
+        url = f'/page/{self._page_begin}/'
+        i = 0
 
         while url is not None:
             url = self._parseLatestSite(url)
+            i += 1
+            if self._page_count is not None:
+                if i > self._page_count:
+                    return False
+
+        return True
 
     def _getList(self, url):
         _hash, content = self._getContent(url)
@@ -305,8 +314,9 @@ class hdtrailersCore:
 
             movie_id = _getMovieId(content)
             movie = DL_items.getItem(self._con, self._core.name, str(movie_id))
-            if movie is not None and movie[1] == _hash:
-                return False
+            if not self._suppressSkip:
+                if movie is not None and movie[1] == _hash:
+                    return False
 
             _movie = _getMovieDetails(movie_id, _hash, content)
             if _movie is not None:
