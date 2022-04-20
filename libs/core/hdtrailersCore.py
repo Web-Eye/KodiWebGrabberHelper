@@ -1,3 +1,5 @@
+import random
+import time
 import urllib
 import urllib.parse
 
@@ -239,8 +241,14 @@ class hdtrailersCore:
             print(f'Deleted Trailers: {self._deletedTrailers}')
 
     def _getContent(self, url):
+        time.sleep(random.randint(3, 8))
         url = urllib.parse.urljoin(self._baseurl, url)
-        page = self._requests_session.get(url)
+
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+        }
+
+        page = self._requests_session.get(url, timeout=10, headers=headers)
         _hash = hashlib.md5(page.content).hexdigest()
         content = BeautifulSoup(page.content, 'lxml')
         return _hash, content
