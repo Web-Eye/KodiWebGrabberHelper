@@ -171,7 +171,6 @@ def _getMovieDetails(movie_id, _hash, content):
         if plot_block is not None:
             plot = plot_block.find('span').getText()
         poster = urllib.parse.urljoin("http:", info.find('img')['src'])
-        print(title)
         latestDate, trailerCollection = _getTrailerCollection(content)
 
         if tools.getLength(trailerCollection) > 0:
