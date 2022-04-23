@@ -1,4 +1,4 @@
-from libs.core.databaseHelper import databaseHelper
+from ..databaseHelper import databaseHelper
 
 
 class DL_settings:

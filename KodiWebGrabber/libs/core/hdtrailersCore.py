@@ -2,22 +2,18 @@ import random
 import time
 import urllib
 import urllib.parse
-
-import requests
-from bs4 import BeautifulSoup
-import lxml
-import cchardet
 import hashlib
+import requests
+
+from bs4 import BeautifulSoup
 from decimal import Decimal, InvalidOperation
 
-from libs.common import tools
-from libs.common.enums import tagEnum, subItemTagEnum, listEnum
-from libs.core.Datalayer.DL_items import DL_items
-from libs.core.Datalayer.DL_links import DL_links
-from libs.core.Datalayer.DL_lists import DL_lists
-from libs.core.Datalayer.DL_subItems import DL_subItems
-from libs.core.databaseCore import databaseCore
-from libs.core.databaseHelper import databaseHelper
+from ..common import tools
+from ..common.enums import *
+from ..core.Datalayer.DL_items import *
+from ..core.Datalayer.DL_subItems import *
+from ..core.databaseCore import databaseCore
+from ..core.databaseHelper import databaseHelper
 
 
 def _getMovieId(content):
@@ -211,6 +207,13 @@ class hdtrailersCore:
         self._page_begin = addArgs['page_begin']
         self._page_count = addArgs['page_count']
         self._suppressSkip = addArgs['suppress_skip']
+        self._minWaittime = 0.5
+        self._maxWaittime = 3.5
+        waittime = addArgs['wait_time']
+        if waittime is not None:
+            self._minWaittime = waittime[0]
+            self._maxWaittime = waittime[1]
+
         self._con = None
         self._requests_session = None
 
@@ -245,7 +248,9 @@ class hdtrailersCore:
         while True:
 
             try:
-                time.sleep(random.randint(1, 6))
+                wt = round(random.uniform(self._minWaittime, self._maxWaittime), 2)
+                if wt > 0:
+                    time.sleep(wt)
                 url = urllib.parse.urljoin(self._baseurl, url)
 
                 headers = {

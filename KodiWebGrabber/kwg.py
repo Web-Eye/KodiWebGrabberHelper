@@ -1,8 +1,9 @@
 import argparse
-from libs.common.PIDhandler import PIDhandler
+
 import sys
 from os import _exit
 
+from libs.common.PIDhandler import PIDhandler
 from libs.common.enums import coreEnum
 from libs.core.ardmediathekCore import ardmediathekCore
 from libs.core.databaseCore import databaseCore
@@ -169,8 +170,15 @@ def main():
                         type=int
                         )
 
-    parser.add_argument('--suppressSkip',
+    parser.add_argument('-s', '--suppressSkip',
                         action='store_true')
+
+    parser.add_argument('-wt', '--waittime',
+                        type=float,
+                        nargs=2,
+                        metavar=('min waittime', 'max waittime'),
+                        help='Waits in a range of seconds before sending the next request.',
+                        )
 
     try:
         args = parser.parse_args()
@@ -201,6 +209,7 @@ def main():
         'page_begin': args.page,
         'page_count': args.pagecount,
         'suppress_skip': args.suppressSkip,
+        'wait_time': args.waittime,
         'verbose': args.verbose
     }
 

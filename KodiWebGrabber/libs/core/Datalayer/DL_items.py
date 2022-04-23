@@ -1,13 +1,13 @@
-from libs.core.databaseHelper import databaseHelper
+from ..databaseHelper import databaseHelper
 
 
 class DL_items:
 
     @staticmethod
     def existsItem(con, project, identifier):
-        query = 'SELECT COUNT(*) FROM items WHERE project = ? AND identifier = ?;'
-        c = databaseHelper.executeScalar(con, query, (project, identifier,))
-        return c != 0
+        query = 'SELECT item_id FROM items WHERE project = ? AND identifier = ?;'
+        item_id = databaseHelper.executeScalar(con, query, (project, identifier,))
+        return item_id
 
     @staticmethod
     def insertItem(con, item):
@@ -15,7 +15,6 @@ class DL_items:
                     '(?, ?, UNHEX(?), ?, ?, ?, ?, ?);'
 
         return databaseHelper.executeNonQuery(con, statement, item)
-
 
     @staticmethod
     def getItem(con, project, identifier, _hash=None):
@@ -56,6 +55,12 @@ class DL_items:
         item = item + (item_id,)
         row_count, _id = databaseHelper.executeNonQuery(con, statement, item)
         return row_count
+
+    @staticmethod
+    def deleteItem(con, item_id):
+        statement = 'DELETE FROM items WHERE item_id = ?;'
+
+        return databaseHelper.executeNonQuery(con, statement, (item_id, ))
 
     @staticmethod
     def deleteExpiredItems(con, project):

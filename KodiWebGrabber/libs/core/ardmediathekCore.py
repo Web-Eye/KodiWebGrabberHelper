@@ -1,14 +1,16 @@
 import json
+import random
+import time
 
 import requests
 
-from libs.common import tools
-from libs.common.enums import tagEnum, coreEnum, subItemTagEnum
-from libs.core.Datalayer.DL_links import DL_links
-from libs.core.Datalayer.DL_items import DL_items
-from libs.core.Datalayer.DL_subItems import DL_subItems
-from libs.core.databaseCore import databaseCore
-from libs.core.databaseHelper import databaseHelper
+from ..common import tools
+from ..common.enums import tagEnum, coreEnum, subItemTagEnum
+from ..core.Datalayer.DL_links import DL_links
+from ..core.Datalayer.DL_items import DL_items
+from ..core.Datalayer.DL_subItems import DL_subItems
+from ..core.databaseCore import databaseCore
+from ..core.databaseHelper import databaseHelper
 
 
 def _getBestQuality(mediastreamarray):
@@ -44,6 +46,14 @@ class ardmediathekCore:
         self._verbose = addArgs['verbose']
         self._page_begin = addArgs['page_begin']
         self._page_count = addArgs['page_count']
+        self._suppressSkip = addArgs['suppress_skip']
+        self._minWaittime = 0.0
+        self._maxWaittime = 0.0
+        waittime = addArgs['wait_time']
+        if waittime is not None:
+            self._minWaittime = waittime[0]
+            self._maxWaittime = waittime[1]
+
         self._con = None
 
         self._addedShows = 0
@@ -69,12 +79,37 @@ class ardmediathekCore:
     def _deleteExpiredShows(self):
         self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core.name)
 
+    def _getContent(self, requests_session, url):
+        conn_tries = 0
+        while True:
+
+            try:
+                wt = round(random.uniform(self._minWaittime, self._maxWaittime), 2)
+                if wt > 0:
+                    time.sleep(wt)
+
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+                }
+
+                page = requests_session.get(url, timeout=10, headers=headers)
+                return json.loads(page.content)
+
+            except requests.exceptions.ConnectionError as e:
+                conn_tries += 1
+                if conn_tries > 4:
+                    print('exit [max reties are reached]')
+                    raise e
+
+                time.sleep(60)
+
     def _getLatestShows(self):
-        pagenumber = 0
+        pagenumber = self._page_begin - 1
         pagesize = 48
         totalelements = 1
 
         requests_session = requests.Session()
+        i = 0
 
         while totalelements > (pagenumber * pagesize):
 
@@ -82,8 +117,8 @@ class ardmediathekCore:
             url = url.replace('{pageNumber}', str(pagenumber))
             url = url.replace('{pageSize}', str(pagesize))
 
-            page = requests_session.get(url)
-            content = json.loads(page.content)
+            content = self._getContent(requests_session, url)
+
             if content is None:
                 break
 
@@ -98,6 +133,10 @@ class ardmediathekCore:
             pagenumber = pagenumber + 1
             totalelements = int(pagination['totalElements'])
 
+            i += 1
+            if self._page_count is not None and i >= self._page_count:
+                break
+
     def _getShows(self, requests_session, shows):
 
         if shows is None:
@@ -105,12 +144,12 @@ class ardmediathekCore:
 
         for show in shows:
             identifier = show['id']
-            if DL_items.existsItem(self._con, self._core.name, identifier):
+            showExists_id = DL_items.existsItem(self._con, self._core.name, identifier)
+            if showExists_id > 0 and not self._suppressSkip:
                 return False
 
             detail_url = show['links']['target']['href']
-            page = requests_session.get(detail_url)
-            content = json.loads(page.content)
+            content = self._getContent(requests_session, detail_url)
             if content is None:
                 return False
 
@@ -123,6 +162,9 @@ class ardmediathekCore:
                 best_quality = _getBestQuality(mediastreamarray)
 
             if best_quality > -1:
+
+                if showExists_id > 0:
+                    DL_items.deleteItem(self._con, showExists_id)
 
                 item = (
                     self._core.name,
