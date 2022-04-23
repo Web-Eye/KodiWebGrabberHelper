@@ -10,7 +10,7 @@ from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
-__VERSION__ = '1.1.0+Beta'
+__VERSION__ = '1.1.2+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
