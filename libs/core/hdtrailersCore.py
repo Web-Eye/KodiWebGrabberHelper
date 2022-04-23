@@ -245,7 +245,7 @@ class hdtrailersCore:
         while True:
 
             try:
-                time.sleep(random.randint(3, 8))
+                time.sleep(random.randint(1, 6))
                 url = urllib.parse.urljoin(self._baseurl, url)
 
                 headers = {
