@@ -132,7 +132,7 @@ class databaseCore:
 
             statement = 'CREATE VIEW viewItems AS' \
                         '   SELECT ' \
-                        '      i.project, i.title, i.plot, i.tag, i.poster_url, si.title AS si_title,' \
+                        '      i.item_id, i.project, i.title, i.plot, i.tag, i.poster_url, si.title AS si_title,' \
                         '      si.tag AS si_tag, si.broadcastOn_date, si.availableTo_date, si.duration, li.quality, ' \
                         '      li.best_quality, li.hoster, li.size, li.url  FROM ' \
                         '         items AS i' \
