@@ -133,12 +133,12 @@ class databaseCore:
 
             statement = 'CREATE VIEW viewItems AS' \
                         '   SELECT ' \
-                        '      i.item_id, i.project, i.title, i.plot, i.tag, i.poster_url, si.title AS si_title,' \
-                        '      si.tag AS si_tag, si.broadcastOn_date, si.availableTo_date, si.duration, li.quality, ' \
-                        '      li.best_quality, li.hoster, li.size, li.url  FROM ' \
-                        '         items AS i' \
-                        '         LEFT JOIN sub_items AS si ON i.item_id = si.item_id' \
-                        '         LEFT JOIN links AS li ON si.subItem_id = li.subItem_id' \
+                        '      i.item_id, i.project, i.title, i.plot, i.tag, i.poster_url, si.subitem_id, ' \
+                        '      si.si.title AS si_title, si.tag AS si_tag, si.broadcastOn_date, si.availableTo_date, ' \
+                        '      si.duration, li.link_id, li.quality, li.best_quality, li.hoster, li.size, li.url  ' \
+                        '   FROM items AS i' \
+                        '   LEFT JOIN sub_items AS si ON i.item_id = si.item_id' \
+                        '   LEFT JOIN links AS li ON si.subItem_id = li.subItem_id' \
                         '' \
                         '   ORDER BY i.order_date DESC, si.broadcastOn_date DESC;'
 
