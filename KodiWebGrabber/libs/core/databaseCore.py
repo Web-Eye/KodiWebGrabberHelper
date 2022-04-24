@@ -1,6 +1,7 @@
 import mariadb
-from ..core.Datalayer.DL_settings import DL_settings
-from ..core.databaseHelper import databaseHelper
+
+from .Datalayer.DL_settings import DL_settings
+from .databaseHelper import databaseHelper
 
 
 class databaseCore:

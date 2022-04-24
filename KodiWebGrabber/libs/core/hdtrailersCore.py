@@ -10,10 +10,11 @@ from decimal import Decimal, InvalidOperation
 
 from ..common import tools
 from ..common.enums import *
-from ..core.Datalayer.DL_items import *
-from ..core.Datalayer.DL_subItems import *
-from ..core.databaseCore import databaseCore
-from ..core.databaseHelper import databaseHelper
+from .Datalayer.DL_items import *
+from .Datalayer.DL_subItems import *
+from .Datalayer.DL_links import DL_links
+from .databaseCore import databaseCore
+from .databaseHelper import databaseHelper
 
 
 def _getMovieId(content):

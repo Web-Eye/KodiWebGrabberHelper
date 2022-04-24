@@ -1,16 +1,15 @@
 import json
 import random
 import time
-
 import requests
 
 from ..common import tools
 from ..common.enums import tagEnum, coreEnum, subItemTagEnum
-from ..core.Datalayer.DL_links import DL_links
-from ..core.Datalayer.DL_items import DL_items
-from ..core.Datalayer.DL_subItems import DL_subItems
-from ..core.databaseCore import databaseCore
-from ..core.databaseHelper import databaseHelper
+from .Datalayer.DL_links import DL_links
+from .Datalayer.DL_items import DL_items
+from .Datalayer.DL_subItems import DL_subItems
+from .databaseCore import databaseCore
+from .databaseHelper import databaseHelper
 
 
 def _getBestQuality(mediastreamarray):
