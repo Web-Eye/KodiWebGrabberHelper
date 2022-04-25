@@ -278,7 +278,7 @@ class hdtrailersCore:
             except requests.exceptions.ConnectionError as e:
                 conn_tries += 1
                 if conn_tries > 4:
-                    print('exit [max reties are reached]')
+                    print('exit [max retries are reached]')
                     raise e
 
                 time.sleep(60)
