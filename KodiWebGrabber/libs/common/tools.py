@@ -89,3 +89,16 @@ def getLength(o):
 
     return len(o)
 
+
+def eint(value, default=0):
+    if value is not None:
+        return int(value)
+
+    return default
+
+
+def estr(value, default=''):
+    if value is not None:
+        return str(value)
+
+    return default

@@ -143,7 +143,7 @@ class ardmediathekCore:
 
         for show in shows:
             identifier = show['id']
-            showExists_id = DL_items.existsItem(self._con, self._core.name, identifier)
+            showExists_id = tools.eint(DL_items.existsItem(self._con, self._core.name, identifier))
             if showExists_id > 0 and not self._suppressSkip:
                 return False
 
