@@ -332,7 +332,9 @@ class hdtrailersCore:
         if nav_items is not None:
             nav_item = filter(lambda p: 'Next' in p.getText(), nav_items)
             if nav_item is not None:
-                return next(nav_item)['href']
+                _item = next(nav_item, None)
+                if _item is not None:
+                    return _item['href']
 
         return None
 
