@@ -13,6 +13,7 @@ from ..common.enums import *
 from .Datalayer.DL_items import *
 from .Datalayer.DL_subItems import *
 from .Datalayer.DL_links import DL_links
+from .Datalayer.DL_lists import DL_lists
 from .databaseCore import databaseCore
 from .databaseHelper import databaseHelper
 
@@ -117,6 +118,18 @@ def _getTrailerCollection(content):
 
     for link in link_content:
         if link.name == 'td' and link.has_attr('class') and link['class'][0] == 'bottomTableSet':
+            if tools.getLength(trailer_links) > 0:
+                latest_date = tools.maxDate(trailer_date, latest_date)
+                trailer_collection.append(
+                    {
+                        'name': trailer_name,
+                        'type': trailer_type,
+                        'date': trailer_date,
+                        'links': trailer_links
+                    }
+                )
+                trailer_links = []
+
             trailer_type = _getTrailerType(link)
 
         elif link.name == 'tr' and link.has_attr('itemprop') and link['itemprop'] == 'trailer':
