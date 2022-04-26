@@ -63,7 +63,7 @@ def _getTrailerLinks(link):
             if _validHoster(url):
                 link_collection.append(
                     {
-                        'title': a_tag['title'],
+                        'title': str(a_tag['title']).strip(),
                         'quality': a_tag.getText(),
                         'best_quality': False,
                         'size': None,
@@ -176,10 +176,10 @@ def _getMovieDetails(movie_id, _hash, content):
     plot = None
     info = content.find('td', class_='topTableInfo')
     if info is not None:
-        title = info.find('h1', class_='previewTitle').getText()
+        title = str(info.find('h1', class_='previewTitle').getText()).strip()
         plot_block = info.find('p', class_='previewDescription')
         if plot_block is not None:
-            plot = plot_block.find('span').getText()
+            plot = str(plot_block.find('span').getText()).strip()
         poster = urllib.parse.urljoin("http:", info.find('img')['src'])
         latestDate, trailerCollection = _getTrailerCollection(content)
 
