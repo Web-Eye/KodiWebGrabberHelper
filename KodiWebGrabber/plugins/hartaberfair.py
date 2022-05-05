@@ -1,14 +1,19 @@
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
+__TEMPLATE__ = 'hartaberfair'
+__PID__ = 'HartAberFair.pid'
 
 
 def register():
-    if __TYPE__ == 'pluging':
-        pass
-
-    f = __file__
-    n = __name__
-    pass
+    if __TYPE__ == 'plugin':
+        return {
+            'name': __name__,
+            'file': __file__,
+            'template': __TEMPLATE__,
+            'version': __VERSION__,
+            'type': __TYPE__,
+            'pid': __PID__
+        }
 
 
 class hart:

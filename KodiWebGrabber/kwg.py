@@ -145,18 +145,35 @@ def isValidConfig(config):
     return True
 
 def getPlugins():
+
+    plugins = []
+    templates = []
+    helpTuple = ()
+
     cwd = os.path.join(os.getcwd(), 'plugins')
     for f in os.listdir(cwd):
         if isfile(os.path.join(cwd, f)):
             h = importlib.import_module('plugins.' + f[:-3])
             # module method
-            h.register()
+            plugin = h.register()
+            if plugin is not None:
+                plugins.append(plugin)
+                templates.append(plugin.get('template'))
+                helpTuple += (plugin.get('template'), )
             # class
-            hart = h.hart(4)
+            # hart = h.hart(4)
+
+    helpString = 'Accepts any of these values: ' + ', '.join(helpTuple)
+
+    return plugins, templates, helpString
 
 
 def main():
-    plugins = getPlugins()
+    plugins, templates, helpString = getPlugins()
+    if plugins is None or len(plugins) == 0:
+        print('no plugin found')
+        return
+
     parser = argparse.ArgumentParser(
         description='runner',
         epilog="That's all folks"
@@ -165,8 +182,8 @@ def main():
     parser.add_argument('-t', '--template',
                         metavar='template switch',
                         type=str,
-                        help='Accepts any of these values: hartaberfair, inasnacht, rockpalast, hdtrailers',
-                        choices=['hartaberfair', 'inasnacht', 'rockpalast', 'hdtrailers'])
+                        help=helpString,
+                        choices=templates)
 
     parser.add_argument('-c', '--config',
                         action='store_true')
