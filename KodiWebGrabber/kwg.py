@@ -1,7 +1,11 @@
 import argparse
+import os
 
 import sys
 from os import _exit
+from os import listdir
+import importlib
+from os.path import isfile
 
 from libs.common.PIDhandler import PIDhandler
 from libs.common.enums import coreEnum
@@ -10,7 +14,7 @@ from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
-__VERSION__ = '1.1.2+Beta'
+__VERSION__ = '1.2.0+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
@@ -140,8 +144,19 @@ def isValidConfig(config):
         return False
     return True
 
+def getPlugins():
+    cwd = os.path.join(os.getcwd(), 'plugins')
+    for f in os.listdir(cwd):
+        if isfile(os.path.join(cwd, f)):
+            h = importlib.import_module('plugins.' + f[:-3])
+            # module method
+            h.register()
+            # class
+            hart = h.hart(4)
+
 
 def main():
+    plugins = getPlugins()
     parser = argparse.ArgumentParser(
         description='runner',
         epilog="That's all folks"
