@@ -18,6 +18,29 @@ __VERSION__ = '1.2.0+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
+def runTemplate(plugins, template, config, addArgs):
+    if plugins is not None and len(plugins) > 0 and template is not None and template:
+        plugin = next(filter(lambda p: p.get('template') == template, plugins), None)
+        if plugin is not None:
+            pidfile = GetPIDFile(plugin.get('pid'))
+            h = PIDhandler(pidfile)
+            h.checkPID()
+            core = None
+
+            try:
+                m = importlib.import_module(plugin.get('name'))
+                core = m.core(config, addArgs)
+                core.run()
+
+            except KeyboardInterrupt:
+                if core is not None:
+                    print("interupt")
+                    pass
+
+            h.unlinkPID()
+            _exit(1)
+
+
 def doHartAberFair(config, addArgs):
     pidfile = GetPIDFile("HartAberFair.pid")
     h = PIDhandler(pidfile)
@@ -153,13 +176,16 @@ def getPlugins():
     cwd = os.path.join(os.getcwd(), 'plugins')
     for f in os.listdir(cwd):
         if isfile(os.path.join(cwd, f)):
-            h = importlib.import_module('plugins.' + f[:-3])
-            # module method
-            plugin = h.register()
-            if plugin is not None:
-                plugins.append(plugin)
-                templates.append(plugin.get('template'))
-                helpTuple += (plugin.get('template'), )
+            try:
+                m = importlib.import_module('plugins.' + f[:-3])
+                plugin = m.register()
+                if plugin is not None:
+                    plugins.append(plugin)
+                    templates.append(plugin.get('template'))
+                    helpTuple += (plugin.get('template'), )
+            except (AttributeError):
+                pass
+
             # class
             # hart = h.hart(4)
 
@@ -245,13 +271,15 @@ def main():
         'verbose': args.verbose
     }
 
-    {
-        'hartaberfair': doHartAberFair,
-        'inasnacht': doInasNacht,
-        'rockpalast': doRockpalast,
-        'hdtrailers': doHDTrailers,
-        None: doNothing
-    }[template](config, addArgs)
+    # {
+    #     'hartaberfair': doHartAberFair,
+    #     'inasnacht': doInasNacht,
+    #     'rockpalast': doRockpalast,
+    #     'hdtrailers': doHDTrailers,
+    #     None: doNothing
+    # }[template](config, addArgs)
+
+    runTemplate(plugins, template, config, addArgs)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,5 @@
+from libs.core.ardmediathekCore import ardmediathekCore
+
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
 __TEMPLATE__ = 'hartaberfair'
@@ -16,7 +18,16 @@ def register():
         }
 
 
-class hart:
+class core:
 
-    def __init__(self, myid):
-        self._id = myid
+    def __init__(self, config, addArgs):
+        self._config = config
+        self._addArgs = addArgs
+
+        self._channel = 'daserste'
+        self._mediathek_id = 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg'
+        self._core_id = 'HARTABERFAIR'
+
+    def run(self):
+        _core = ardmediathekCore(self._core_id, self._channel, self._mediathek_id, self._config, self._addArgs)
+        _core.run()

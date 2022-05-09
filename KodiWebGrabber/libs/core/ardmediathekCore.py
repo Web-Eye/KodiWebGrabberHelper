@@ -3,8 +3,9 @@ import random
 import time
 import requests
 
+from .Datalayer.DL_projects import DL_projects
 from ..common import tools
-from ..common.enums import tagEnum, coreEnum, subItemTagEnum
+from ..common.enums import tagEnum, subItemTagEnum
 from .Datalayer.DL_links import DL_links
 from .Datalayer.DL_items import DL_items
 from .Datalayer.DL_subItems import DL_subItems
@@ -37,8 +38,9 @@ def _getQuality(quality):
 
 class ardmediathekCore:
 
-    def __init__(self, core, channel, mediathek_id, config, addArgs):
-        self._core = core
+    def __init__(self, core_id, channel, mediathek_id, config, addArgs):
+        self._project_id = 0
+        self._core_id = core_id
         self._channel = channel
         self._mediathek_id = mediathek_id
         self._config = config
@@ -66,6 +68,10 @@ class ardmediathekCore:
 
         self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
 
+        self._addProject()
+        self._addItemTags()
+        self._addSubItemTags()
+
         self._deleteExpiredShows()
         self._getLatestShows()
 
@@ -75,8 +81,23 @@ class ardmediathekCore:
             print(f'Added Shows: {self._addedShows}')
             print(f'Deleted Shows: {self._deletedShows}')
 
+    def _addProject(self):
+        _project_id = DL_projects.getItem(self._con, self._core_id)
+        if _project_id == 0:
+            _, _project_id = DL_projects.insertItem(self._con, self._core_id)
+
+        self._project_id = _project_id
+
+    # TODO: addItemTags
+    def _addItemTags(self):
+        pass
+
+    # TODO: addSubItemTags
+    def _addSubItemTags(self):
+        pass
+
     def _deleteExpiredShows(self):
-        self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core.name)
+        self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core_id)
 
     def _getContent(self, requests_session, url):
         conn_tries = 0
@@ -143,7 +164,7 @@ class ardmediathekCore:
 
         for show in shows:
             identifier = show['id']
-            showExists_id = tools.eint(DL_items.existsItem(self._con, self._core.name, identifier))
+            showExists_id = tools.eint(DL_items.existsItem(self._con, self._core_id, identifier))
             if showExists_id > 0 and not self._suppressSkip:
                 return False
 
@@ -166,7 +187,7 @@ class ardmediathekCore:
                     DL_items.deleteItem(self._con, showExists_id)
 
                 item = (
-                    self._core.name,
+                    self._core_id,
                     identifier,
                     None,
                     title,
@@ -208,18 +229,18 @@ class ardmediathekCore:
         return True
 
     def _getTag(self, title):
-        if self._core == coreEnum.HARTABERFAIR:
-            if '(mit Gebärdensprache)' in title:
-                return tagEnum.SIGNLANGUAGE
-        elif self._core == coreEnum.INASNACHT:
-            if 'Musik bei Inas Nacht:' in title:
-                return tagEnum.MUSICCLIP
-        elif self._core == coreEnum.ROCKPALAST:
-            if 'Unplugged:' in title:
-                return tagEnum.UNPLUGGED
-            elif 'Live-Preview:' in title:
-                return tagEnum.LIVEPREVIEW
-            elif 'Interview' in title:
-                return tagEnum.INTERVIEW
+        # if self._core == coreEnum.HARTABERFAIR:
+        #     if '(mit Gebärdensprache)' in title:
+        #         return tagEnum.SIGNLANGUAGE
+        # elif self._core == coreEnum.INASNACHT:
+        #     if 'Musik bei Inas Nacht:' in title:
+        #         return tagEnum.MUSICCLIP
+        # elif self._core == coreEnum.ROCKPALAST:
+        #     if 'Unplugged:' in title:
+        #         return tagEnum.UNPLUGGED
+        #     elif 'Live-Preview:' in title:
+        #         return tagEnum.LIVEPREVIEW
+        #     elif 'Interview' in title:
+        #         return tagEnum.INTERVIEW
 
         return tagEnum.NONE
