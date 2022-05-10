@@ -4,15 +4,15 @@ from ..databaseHelper import databaseHelper
 class DL_items:
 
     @staticmethod
-    def existsItem(con, project, identifier):
-        query = 'SELECT item_id FROM items WHERE project = ? AND identifier = ?;'
-        item_id = databaseHelper.executeScalar(con, query, (project, identifier,))
+    def existsItem(con, project_id, identifier):
+        query = 'SELECT item_id FROM items WHERE project_id = ? AND identifier = ?;'
+        item_id = databaseHelper.executeScalar(con, query, (project_id, identifier,))
         return item_id
 
     @staticmethod
     def insertItem(con, item):
-        statement = 'INSERT INTO items (project, identifier, hash, title, plot, tag, poster_url, order_date) VALUES ' \
-                    '(?, ?, UNHEX(?), ?, ?, ?, ?, ?);'
+        statement = 'INSERT INTO items (project_id, identifier, hash, title, plot, tag_id, poster_url, order_date) ' \
+                    'VALUES (?, ?, UNHEX(?), ?, ?, ?, ?, ?);'
 
         return databaseHelper.executeNonQuery(con, statement, item)
 

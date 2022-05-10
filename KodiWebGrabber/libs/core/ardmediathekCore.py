@@ -69,9 +69,6 @@ class ardmediathekCore:
         self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
 
         self._addProject()
-        self._addItemTags()
-        self._addSubItemTags()
-
         self._deleteExpiredShows()
         self._getLatestShows()
 
@@ -87,14 +84,6 @@ class ardmediathekCore:
             _, _project_id = DL_projects.insertItem(self._con, self._core_id)
 
         self._project_id = _project_id
-
-    # TODO: addItemTags
-    def _addItemTags(self):
-        pass
-
-    # TODO: addSubItemTags
-    def _addSubItemTags(self):
-        pass
 
     def _deleteExpiredShows(self):
         self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core_id)
@@ -164,7 +153,7 @@ class ardmediathekCore:
 
         for show in shows:
             identifier = show['id']
-            showExists_id = tools.eint(DL_items.existsItem(self._con, self._core_id, identifier))
+            showExists_id = tools.eint(DL_items.existsItem(self._con, self._project_id, identifier))
             if showExists_id > 0 and not self._suppressSkip:
                 return False
 
@@ -187,12 +176,12 @@ class ardmediathekCore:
                     DL_items.deleteItem(self._con, showExists_id)
 
                 item = (
-                    self._core_id,
+                    self._project_id,
                     identifier,
                     None,
                     title,
                     widget['synopsis'],
-                    self._getTag(title).name,
+                    self._getTag_id(title),
                     show['images']['aspect16x9']['src'],
                     tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
                 )
@@ -228,7 +217,9 @@ class ardmediathekCore:
 
         return True
 
-    def _getTag(self, title):
+    def _getTag_id(self, title):
+        tag = 'None'
+        return -1
         # if self._core == coreEnum.HARTABERFAIR:
         #     if '(mit Gebärdensprache)' in title:
         #         return tagEnum.SIGNLANGUAGE
@@ -243,4 +234,6 @@ class ardmediathekCore:
         #     elif 'Interview' in title:
         #         return tagEnum.INTERVIEW
 
-        return tagEnum.NONE
+
+
+

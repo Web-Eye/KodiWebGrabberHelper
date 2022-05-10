@@ -18,16 +18,14 @@ def register():
         }
 
 
-class core:
+class core(ardmediathekCore):
 
     def __init__(self, config, addArgs):
-        self._config = config
-        self._addArgs = addArgs
+        _channel = 'daserste'
+        _mediathek_id = 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg'
+        _core_id = 'HARTABERFAIR'
 
-        self._channel = 'daserste'
-        self._mediathek_id = 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg'
-        self._core_id = 'HARTABERFAIR'
+        super().__init__(_core_id, _channel, _mediathek_id, config, addArgs)
 
-    def run(self):
-        _core = ardmediathekCore(self._core_id, self._channel, self._mediathek_id, self._config, self._addArgs)
-        _core.run()
+    def _getTag_id(self, title):
+        return 1
