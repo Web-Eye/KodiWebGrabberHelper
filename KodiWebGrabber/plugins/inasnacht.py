@@ -2,8 +2,8 @@ from libs.core.ardmediathekCore import ardmediathekCore
 
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
-__TEMPLATE__ = 'hartaberfair'
-__PID__ = 'HartAberFair.pid'
+__TEMPLATE__ = 'inasnacht'
+__PID__ = 'InasNacht.pid'
 
 
 def register():
@@ -22,21 +22,21 @@ class core(ardmediathekCore):
 
     def __init__(self, config, addArgs):
         _channel = 'daserste'
-        _mediathek_id = 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg'
-        _core_id = 'HARTABERFAIR'
+        _mediathek_id = 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5'
+        _core_id = 'INASNACHT'
 
         super().__init__(_core_id, _channel, _mediathek_id, config, addArgs)
 
     def _getItemTags(self):
         _dict = {}
         _dict = self._addItemTag(_dict, 'None')
-        _dict = self._addItemTag(_dict, 'SIGNLANGUAGE')
+        _dict = self._addItemTag(_dict, 'MUSICCLIP')
 
         return _dict
 
     def _getTag_id(self, title):
-        if '(mit Gebärdensprache)' in title:
-            return self._itemTagDict['SIGNLANGUAGE']
+        if 'Musik bei Inas Nacht:' in title:
+            return self._itemTagDict['MUSICCLIP']
 
         return self._itemTagDict['None']
 

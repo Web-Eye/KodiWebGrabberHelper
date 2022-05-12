@@ -3,37 +3,16 @@ import random
 import time
 import requests
 
+from .Datalayer.DL_itemTags import DL_itemTags
 from .Datalayer.DL_projects import DL_projects
+from .Datalayer.DL_qualities import DL_qualities
+from .Datalayer.DL_subitemTags import DL_subitemTags
 from ..common import tools
-from ..common.enums import tagEnum, subItemTagEnum
 from .Datalayer.DL_links import DL_links
 from .Datalayer.DL_items import DL_items
 from .Datalayer.DL_subItems import DL_subItems
 from .databaseCore import databaseCore
 from .databaseHelper import databaseHelper
-
-
-def _getBestQuality(mediastreamarray):
-    li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
-    if tools.getLength(li) > 0:
-        return max(li, key=lambda p: int(p['_quality']))['_quality']
-
-    return -1
-
-
-def _getQuality(quality):
-    if quality == 0:
-        return '270p'
-    elif quality == 1:
-        return '360p'
-    elif quality == 2:
-        return '540p'
-    elif quality == 3:
-        return '720p'
-    elif quality == 4:
-        return '1080p'
-
-    return None
 
 
 class ardmediathekCore:
@@ -59,16 +38,19 @@ class ardmediathekCore:
 
         self._addedShows = 0
         self._deletedShows = 0
+        self._itemTagDict = {}
+        self._subitemTagDict = {}
 
         self._baseurl = f'https://api.ardmediathek.de/page-gateway/widgets/{channel}/asset/{mediathek_id}' \
                         '?pageNumber={pageNumber}&pageSize={pageSize}&embedded=true&seasoned=false&seasonNumber=' \
                         '&withAudiodescription=false&withOriginalWithSubtitle=false&withOriginalversion=false '
 
     def run(self):
-
         self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
 
-        self._addProject()
+        self._project_id = DL_projects.getOrInsertItem(self._con, self._core_id)
+        self._itemTagDict = self._getItemTags()
+        self._subitemTagDict = self._getSubitemTags()
         self._deleteExpiredShows()
         self._getLatestShows()
 
@@ -78,12 +60,28 @@ class ardmediathekCore:
             print(f'Added Shows: {self._addedShows}')
             print(f'Deleted Shows: {self._deletedShows}')
 
-    def _addProject(self):
-        _project_id = DL_projects.getItem(self._con, self._core_id)
-        if _project_id == 0:
-            _, _project_id = DL_projects.insertItem(self._con, self._core_id)
+    @staticmethod
+    def _getBestQuality(mediastreamarray):
+        li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
+        if tools.getLength(li) > 0:
+            return max(li, key=lambda p: int(p['_quality']))['_quality']
 
-        self._project_id = _project_id
+        return -1
+
+    @staticmethod
+    def _getQuality(quality):
+        if quality == 0:
+            return '270p'
+        elif quality == 1:
+            return '360p'
+        elif quality == 2:
+            return '540p'
+        elif quality == 3:
+            return '720p'
+        elif quality == 4:
+            return '1080p'
+
+        return None
 
     def _deleteExpiredShows(self):
         self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core_id)
@@ -168,7 +166,7 @@ class ardmediathekCore:
 
             mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
             if tools.getLength(mediastreamarray) > 0:
-                best_quality = _getBestQuality(mediastreamarray)
+                best_quality = self._getBestQuality(mediastreamarray)
 
             if best_quality > -1:
 
@@ -192,7 +190,7 @@ class ardmediathekCore:
                 item = (
                     item_id,
                     None,
-                    subItemTagEnum.NONE.name,
+                    self._getSubitemTag_id(None),
                     tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                     tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                     show['duration'],
@@ -202,11 +200,11 @@ class ardmediathekCore:
 
                 for stream in mediastreamarray:
 
-                    quality = _getQuality(stream['_quality'])
+                    quality = self._getQuality(stream['_quality'])
                     if quality is not None:
                         item = (
                             subItem_id,
-                            quality,
+                            self._getQuality_id(quality),
                             best_quality == stream['_quality'],
                             tools.getHoster(stream['_stream']),
                             None,
@@ -217,23 +215,35 @@ class ardmediathekCore:
 
         return True
 
+    def _addItemTag(self, _dict, tag):
+        tag_id = DL_itemTags.getOrInsertItem(self._con, tag)
+        _dict[tag] = tag_id
+
+        return _dict
+
+    def _getItemTags(self):
+        _dict = {}
+        _dict = self._addItemTag(_dict, 'None')
+
+        return _dict
+
     def _getTag_id(self, title):
-        tag = 'None'
-        return -1
-        # if self._core == coreEnum.HARTABERFAIR:
-        #     if '(mit Gebärdensprache)' in title:
-        #         return tagEnum.SIGNLANGUAGE
-        # elif self._core == coreEnum.INASNACHT:
-        #     if 'Musik bei Inas Nacht:' in title:
-        #         return tagEnum.MUSICCLIP
-        # elif self._core == coreEnum.ROCKPALAST:
-        #     if 'Unplugged:' in title:
-        #         return tagEnum.UNPLUGGED
-        #     elif 'Live-Preview:' in title:
-        #         return tagEnum.LIVEPREVIEW
-        #     elif 'Interview' in title:
-        #         return tagEnum.INTERVIEW
+        return self._itemTagDict['None']
 
+    def _addSubitemTag(self, _dict, tag):
+        tag_id = DL_subitemTags.getOrInsertItem(self._con, tag)
+        _dict[tag] = tag_id
 
+        return _dict
 
+    def _getSubitemTags(self):
+        _dict = {}
+        _dict = self._addSubitemTag(_dict, 'None')
 
+        return _dict
+
+    def _getSubitemTag_id(self, title):
+        return self._subitemTagDict['None']
+
+    def _getQuality_id(self, quality):
+        return DL_qualities.getOrInsertItem(self._con, quality)

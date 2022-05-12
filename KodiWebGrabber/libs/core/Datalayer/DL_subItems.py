@@ -5,7 +5,7 @@ class DL_subItems:
 
     @staticmethod
     def insertSubItem(con, item):
-        statement = 'INSERT INTO sub_items (item_id, title, tag, broadcastOn_date, availableTo_date, duration) ' \
+        statement = 'INSERT INTO sub_items (item_id, title, tag_id, broadcastOn_date, availableTo_date, duration) ' \
                     'VALUES (?, ?, ?, ?, ?, ?);'
 
         return databaseHelper.executeNonQuery(con, statement, item)

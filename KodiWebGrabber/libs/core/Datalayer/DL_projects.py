@@ -16,3 +16,11 @@ class DL_projects:
         statement = 'INSERT INTO projects (name) VALUES (?);'
 
         return databaseHelper.executeNonQuery(con, statement, (project, ))
+
+    @staticmethod
+    def getOrInsertItem(con, project):
+        _project_id = DL_projects.getItem(con, project)
+        if _project_id == 0:
+            _, _project_id = DL_projects.insertItem(con, project)
+
+        return _project_id

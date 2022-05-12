@@ -2,8 +2,8 @@ from libs.core.ardmediathekCore import ardmediathekCore
 
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
-__TEMPLATE__ = 'hartaberfair'
-__PID__ = 'HartAberFair.pid'
+__TEMPLATE__ = 'rockpalast'
+__PID__ = 'Rockpalast.pid'
 
 
 def register():
@@ -21,22 +21,27 @@ def register():
 class core(ardmediathekCore):
 
     def __init__(self, config, addArgs):
-        _channel = 'daserste'
-        _mediathek_id = 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg'
-        _core_id = 'HARTABERFAIR'
+        _channel = 'wdr'
+        _mediathek_id = 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0'
+        _core_id = 'ROCKPALAST'
 
         super().__init__(_core_id, _channel, _mediathek_id, config, addArgs)
 
     def _getItemTags(self):
         _dict = {}
         _dict = self._addItemTag(_dict, 'None')
-        _dict = self._addItemTag(_dict, 'SIGNLANGUAGE')
+        _dict = self._addItemTag(_dict, 'UNPLUGGED')
+        _dict = self._addItemTag(_dict, 'LIVEPREVIEW')
+        _dict = self._addItemTag(_dict, 'INTERVIEW')
 
         return _dict
 
     def _getTag_id(self, title):
-        if '(mit Gebärdensprache)' in title:
-            return self._itemTagDict['SIGNLANGUAGE']
+        if 'Unplugged:' in title:
+            return self._itemTagDict['UNPLUGGED']
+        if 'Live-Preview:' in title:
+            return self._itemTagDict['LIVEPREVIEW']
+        if 'Interview' in title:
+            return self._itemTagDict['INTERVIEW']
 
         return self._itemTagDict['None']
-

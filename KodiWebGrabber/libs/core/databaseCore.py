@@ -134,9 +134,9 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
-            statement = 'CREATE INDEX idxIproject_id ON sub_items (project_id);'
+            statement = 'CREATE INDEX idxIproject_id ON items (project_id);'
             databaseHelper.executeNonQuery(con, statement)
-            statement = 'CREATE INDEX idxItag_id ON sub_items (tag_id);'
+            statement = 'CREATE INDEX idxItag_id ON items (tag_id);'
             databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TABLE IF NOT EXISTS sub_items (' \
@@ -185,7 +185,7 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
-            statement = 'CREATE INDEX idxLNKidentifier_id ON links (identifier_id);'
+            statement = 'CREATE INDEX idxLNKidentifier_id ON lists (identifier_id);'
             databaseHelper.executeNonQuery(con, statement)
             statement = 'CREATE INDEX idxLNKitem_id ON lists (item_id);'
             databaseHelper.executeNonQuery(con, statement)

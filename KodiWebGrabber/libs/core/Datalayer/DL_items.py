@@ -17,16 +17,16 @@ class DL_items:
         return databaseHelper.executeNonQuery(con, statement, item)
 
     @staticmethod
-    def getItem(con, project, identifier, _hash=None):
+    def getItem(con, project_id, identifier, _hash=None):
 
         if _hash is None:
-            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
-                                                       'identifier = ?', (project, identifier, ))
+            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project_id = ? AND '
+                                                       'identifier = ?', (project_id, identifier, ))
 
         else:
-            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project = ? AND '
+            cursor = databaseHelper.executeReader(con, 'SELECT item_id, HEX(hash) FROM items WHERE project_id = ? AND '
                                                        'identifier = ? AND hash = UNHEX(?)',
-                                                  (project, identifier, _hash,))
+                                                  (project_id, identifier, _hash,))
 
         row = cursor.fetchone()
         if row is not None:
@@ -47,7 +47,7 @@ class DL_items:
                     '       hash = UNHEX(?)' \
                     '      ,title = ?' \
                     '      ,plot = ?' \
-                    '      ,tag = ?' \
+                    '      ,tag_id = ?' \
                     '      ,poster_url = ?' \
                     '      ,order_date = ?' \
                     '   WHERE item_id = ?'
@@ -63,18 +63,18 @@ class DL_items:
         return databaseHelper.executeNonQuery(con, statement, (item_id, ))
 
     @staticmethod
-    def deleteExpiredItems(con, project):
+    def deleteExpiredItems(con, project_id):
         statement = 'UPDATE items SET identifier = -1 WHERE item_id IN (' \
                     '   SELECT i.item_id FROM items  AS i' \
                     '   LEFT JOIN sub_items AS si ON i.item_id = si.item_id ' \
-                    '   WHERE project = ? AND si.availableTo_date IS NOT Null AND si.availableTo_date < NOW()' \
+                    '   WHERE project_id = ? AND si.availableTo_date IS NOT Null AND si.availableTo_date < NOW()' \
                     ');'
 
-        databaseHelper.executeNonQuery(con, statement, (project,))
+        databaseHelper.executeNonQuery(con, statement, (project_id,))
 
-        statement = 'DELETE FROM items WHERE project = ? AND identifier = -1;'
+        statement = 'DELETE FROM items WHERE project_id = ? AND identifier = -1;'
 
-        row_count, _id = databaseHelper.executeNonQuery(con, statement, (project,))
+        row_count, _id = databaseHelper.executeNonQuery(con, statement, (project_id,))
         return row_count
 
 

@@ -41,64 +41,6 @@ def runTemplate(plugins, template, config, addArgs):
             _exit(1)
 
 
-def doHartAberFair(config, addArgs):
-    pidfile = GetPIDFile("HartAberFair.pid")
-    h = PIDhandler(pidfile)
-    h.checkPID()
-    core = None
-
-    try:
-        core = ardmediathekCore(coreEnum.HARTABERFAIR, 'daserste', 'Y3JpZDovL3dkci5kZS9oYXJ0IGFiZXIgZmFpcg', config,
-                                addArgs)
-        core.run()
-
-    except KeyboardInterrupt:
-        if core is not None:
-            print("interupt")
-            pass
-
-    h.unlinkPID()
-    _exit(1)
-
-
-def doInasNacht(config, addArgs):
-    pidfile = "InasNacht.pid"
-    h = PIDhandler(pidfile)
-    h.checkPID()
-    core = None
-
-    try:
-        core = ardmediathekCore(coreEnum.INASNACHT, 'daserste', 'Y3JpZDovL2Rhc2Vyc3RlLm5kci5kZS8xNDA5', config, addArgs)
-        core.run()
-
-    except KeyboardInterrupt:
-        if core is not None:
-            print("interupt")
-            pass
-
-    h.unlinkPID()
-    _exit(1)
-
-
-def doRockpalast(config, addArgs):
-    pidfile = "Rockpalast.pid"
-    h = PIDhandler(pidfile)
-    h.checkPID()
-    core = None
-
-    try:
-        core = ardmediathekCore(coreEnum.ROCKPALAST, 'wdr', 'Y3JpZDovL3dkci5kZS9Sb2NrcGFsYXN0', config, addArgs)
-        core.run()
-
-    except KeyboardInterrupt:
-        if core is not None:
-            print("interupt")
-            pass
-
-    h.unlinkPID()
-    _exit(1)
-
-
 def doHDTrailers(config, addArgs):
     pidfile = "HDTrailers.pid"
     h = PIDhandler(pidfile)
@@ -167,6 +109,7 @@ def isValidConfig(config):
         return False
     return True
 
+
 def getPlugins():
 
     plugins = []
@@ -183,11 +126,8 @@ def getPlugins():
                     plugins.append(plugin)
                     templates.append(plugin.get('template'))
                     helpTuple += (plugin.get('template'), )
-            except (AttributeError):
+            except AttributeError:
                 pass
-
-            # class
-            # hart = h.hart(4)
 
     helpString = 'Accepts any of these values: ' + ', '.join(helpTuple)
 
