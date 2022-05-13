@@ -3,13 +3,11 @@ import os
 
 import sys
 from os import _exit
-from os import listdir
 import importlib
 from os.path import isfile
 
 from libs.common.PIDhandler import PIDhandler
 from libs.common.enums import coreEnum
-from libs.core.ardmediathekCore import ardmediathekCore
 from libs.core.databaseCore import databaseCore
 from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig

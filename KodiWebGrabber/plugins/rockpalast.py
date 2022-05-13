@@ -1,4 +1,4 @@
-from libs.core.ardmediathekCore import ardmediathekCore
+from KodiWebGrabber.libs.core.ardmediathekCore import ardmediathekCore
 
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
