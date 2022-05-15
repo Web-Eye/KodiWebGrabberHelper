@@ -9,11 +9,15 @@ from bs4 import BeautifulSoup
 from decimal import Decimal, InvalidOperation
 
 from KodiWebGrabber.libs.common import tools
-from KodiWebGrabber.libs.core.Datalayer.DL_itemTags import DL_itemTags
-from KodiWebGrabber.libs.core.Datalayer.DL_projects import DL_projects
-from KodiWebGrabber.libs.core.Datalayer.DL_subitemTags import DL_subitemTags
 from KodiWebGrabber.libs.core.databaseHelper import databaseHelper
 from KodiWebGrabber.libs.core.databaseCore import databaseCore
+from KodiWebGrabber.libs.core.Datalayer.DL_itemTags import DL_itemTags
+from KodiWebGrabber.libs.core.Datalayer.DL_links import DL_links
+from KodiWebGrabber.libs.core.Datalayer.DL_listIdentifiers import DL_listIdentifiers
+from KodiWebGrabber.libs.core.Datalayer.DL_lists import DL_lists
+from KodiWebGrabber.libs.core.Datalayer.DL_projects import DL_projects
+from KodiWebGrabber.libs.core.Datalayer.DL_qualities import DL_qualities
+from KodiWebGrabber.libs.core.Datalayer.DL_subitemTags import DL_subitemTags
 from KodiWebGrabber.libs.core.Datalayer.DL_items import DL_items
 from KodiWebGrabber.libs.core.Datalayer.DL_subItems import DL_subItems
 
@@ -21,6 +25,8 @@ __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
 __TEMPLATE__ = 'hdtrailers'
 __PID__ = 'HDTrailers.pid'
+
+from KodiWebGrabber.libs.core.tmdbCore import tmdbCore
 
 
 def register():
@@ -62,8 +68,11 @@ class core:
         self._addedListItems = 0
         self._deletedListItems = 0
 
+        self._tmdb = None
+
         self._itemTagDict = {}
         self._subitemTagDict = {}
+        self._qualityDict = {}
 
         self._baseurl = 'http://www.hd-trailers.net/'
 
@@ -73,10 +82,12 @@ class core:
         self._project_id = DL_projects.getOrInsertItem(self._con, self._core_id)
         self._itemTagDict = self._getItemTags()
         self._subitemTagDict = self._getSubitemTags()
+        self._qualityDict = self._getQualityDict()
         self._requests_session = requests.Session()
         if self._getLatest():
-            for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
-                self._getList(url)
+            pass
+            # for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
+            #     self._getList(url)
 
         self._con.close()
 
@@ -167,7 +178,6 @@ class core:
                 else:
                     item_id = movie[0]
                     self._deletedTrailers += DL_subItems.deleteSubItemByItemId(self._con, item_id)
-
                     self._updateMovie(item_id, _movie)
                     self._insertTrailers(item_id, _movie['trailers'])
 
@@ -190,6 +200,8 @@ class core:
             if plot_block is not None:
                 plot = str(plot_block.find('span').getText()).strip()
             poster = urllib.parse.urljoin("http:", info.find('img')['src'])
+            if '-146-poster-xlarge-resized.jpg' in poster:
+                poster = self._getAlternatePoster(title, poster)
             latestDate, trailerCollection = self._getTrailerCollection(content)
 
             if tools.getLength(trailerCollection) > 0:
@@ -275,19 +287,16 @@ class core:
 
         return None, None
 
-    # TODO: _getTrailerType
     @staticmethod
     def _getTrailerType(link):
-        return 'None'
-        # trailer_type_block = link.find('h2')
-        # if trailer_type_block is not None:
-        #     _type = trailer_type_block.getText()
-        #     if _type == 'Trailers':
-        #         return subItemTagEnum.TRAILER
-        #     elif _type == 'Clips':
-        #         return subItemTagEnum.CLIP
-        #
-        # return subItemTagEnum.NONE
+        trailer_type_block = link.find('h2')
+        if trailer_type_block is not None:
+            _type = trailer_type_block.getText()
+            if _type == 'Trailers':
+                return 'TRAILER'
+            elif _type == 'Clips':
+                return 'CLIP'
+        return 'NONE'
 
     @staticmethod
     def _getTrailerName(link):
@@ -385,6 +394,131 @@ class core:
 
     def _getSubitemTags(self):
         _dict = {}
-        _dict = self._addSubitemTag(_dict, 'None')
+        _dict = self._addSubitemTag(_dict, 'NONE')
+        _dict = self._addSubitemTag(_dict, 'TRAILER')
+        _dict = self._addSubitemTag(_dict, 'CLIP')
 
         return _dict
+
+    def _addQualityEntity(self, _dict, entity):
+        entity_id = DL_qualities.getOrInsertItem(self._con, entity)
+        _dict[entity] = entity_id
+
+        return _dict
+
+    def _getQualityDict(self):
+        _dict = {}
+        _dict = self._addQualityEntity(_dict, '480p')
+        _dict = self._addQualityEntity(_dict, '720p')
+        _dict = self._addQualityEntity(_dict, '1080p')
+
+        return _dict
+
+    def _insertTrailers(self, item_id, trailers):
+        for trailer in trailers:
+            item = (
+                item_id,
+                trailer['name'],
+                self._subitemTagDict[trailer['type']],
+                tools.datetimeToString(trailer['date'], '%Y-%m-%d %H:%M:%S'),
+                None,
+                None
+            )
+
+            row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)
+            self._addedTrailers += row_count
+
+            for link in trailer['links']:
+                item = (
+                    subItem_id,
+                    self._qualityDict[link['quality']],
+                    link['best_quality'],
+                    tools.getHoster(link['url']),
+                    link['size'],
+                    link['url'],
+                )
+
+                DL_links.insertLink(self._con, item)
+
+    def _updateMovie(self, item_id, movie):
+        item = (
+            movie['hash'],
+            movie['title'],
+            movie['plot'],
+            self._itemTagDict['None'],
+            movie['poster'],
+            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+        )
+
+        self._editedShows += DL_items.updateItem(self._con, item_id, item)
+
+    def _getList(self, url):
+        _hash, content = self._getContent(url)
+
+        indexTable = content.find('table', class_='indexTable')
+        if indexTable is not None:
+            trItems = indexTable.find_all(lambda tag: tag.name == 'tr')
+            if trItems is not None:
+                lst_id = None
+                count = 0
+                for trItem in trItems:
+                    if trItem.find('th', class_='mainHeading'):
+                        lst_id = self._getListId(trItem)
+                        self._deletedListItems += DL_lists.deleteList(self._con, self._project_id, lst_id)
+                        count = 0
+
+                    elif lst_id is not None:
+                        items = trItem.find_all('td', class_='indexTableTrailerImage')
+                        if items is not None:
+                            for item in items:
+                                link = item.find('a')
+                                url = link['href']
+                                _hash, _content = self._getContent(url)
+                                movie_id = self._getMovieId(_content)
+                                item = DL_items.getItem(self._con, self._project_id, str(movie_id), _hash)
+                                if item is not None:
+                                    count += 1
+                                    listItem = (
+                                        self._project_id,
+                                        lst_id,
+                                        item[0],
+                                        count
+                                    )
+                                    self._addedListItems += DL_lists.insertList(self._con, listItem)
+
+    def _getListId(self, item):
+        t = item.find(lambda tag: tag.name == 'div')
+        if t is not None:
+            tagText = t.getText()
+
+            lstName = None
+
+            if 'Most Watched Trailers This Week' == tagText:
+                lstName = 'MOSTWATCHEDWEEK'
+            elif 'Most Watched Trailers Today' == tagText:
+                lstName = 'MOSTWATCHEDTODAY'
+            elif 'Box Office Top 10 Movies' == tagText:
+                lstName = 'TOPTEN'
+            elif 'Opening This Week' == tagText:
+                lstName = 'OPENING'
+            elif 'Coming Soon' == tagText:
+                lstName = 'COMINGSOON'
+
+            if lstName is not None:
+                return DL_listIdentifiers.getOrInsertItem(self._con, lstName)
+
+        return None
+
+    def _getAlternatePoster(self, title, default):
+
+        if self._tmdb is None:
+            self._tmdb = tmdbCore()
+
+        movie = self._tmdb.searchMovie(title)
+        if movie is not None:
+            posterPath = self._tmdb.getPosterPath(movie)
+            url = self._tmdb.getPosterUrl(posterPath)
+            if url is not None:
+                return url
+
+        return default

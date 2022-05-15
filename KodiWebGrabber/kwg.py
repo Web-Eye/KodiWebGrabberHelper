@@ -7,9 +7,7 @@ import importlib
 from os.path import isfile
 
 from libs.common.PIDhandler import PIDhandler
-from libs.common.enums import coreEnum
 from libs.core.databaseCore import databaseCore
-from libs.core.hdtrailersCore import hdtrailersCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
 __VERSION__ = '1.2.0+Beta'
@@ -37,29 +35,6 @@ def runTemplate(plugins, template, config, addArgs):
 
             h.unlinkPID()
             _exit(1)
-
-
-def doHDTrailers(config, addArgs):
-    pidfile = "HDTrailers.pid"
-    h = PIDhandler(pidfile)
-    h.checkPID()
-    core = None
-
-    try:
-        core = hdtrailersCore(coreEnum.HDTRAILERS, config, addArgs)
-        core.run()
-
-    except KeyboardInterrupt:
-        if core is not None:
-            print("interupt")
-            pass
-
-    h.unlinkPID()
-    _exit(1)
-
-
-def doNothing(config, addArgs):
-    pass
 
 
 def doInputConfig():
@@ -208,14 +183,6 @@ def main():
         'wait_time': args.waittime,
         'verbose': args.verbose
     }
-
-    # {
-    #     'hartaberfair': doHartAberFair,
-    #     'inasnacht': doInasNacht,
-    #     'rockpalast': doRockpalast,
-    #     'hdtrailers': doHDTrailers,
-    #     None: doNothing
-    # }[template](config, addArgs)
 
     runTemplate(plugins, template, config, addArgs)
 

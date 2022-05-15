@@ -177,6 +177,7 @@ class databaseCore:
 
             statement = 'CREATE TABLE IF NOT EXISTS lists (' \
                         '   list_id INT NOT NULL AUTO_INCREMENT,' \
+                        '   project_id INT NOT NULL,' \
                         '   identifier_id INT NOT NULL,' \
                         '   item_id INT NOT NULL,' \
                         '   order_id INT NOT NULL,' \
@@ -185,9 +186,11 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
-            statement = 'CREATE INDEX idxLNKidentifier_id ON lists (identifier_id);'
+            statement = 'CREATE INDEX idxLSTproject_id ON lists (project_id);'
             databaseHelper.executeNonQuery(con, statement)
-            statement = 'CREATE INDEX idxLNKitem_id ON lists (item_id);'
+            statement = 'CREATE INDEX idxLSTidentifier_id ON lists (identifier_id);'
+            databaseHelper.executeNonQuery(con, statement)
+            statement = 'CREATE INDEX idxLSTitem_id ON lists (item_id);'
             databaseHelper.executeNonQuery(con, statement)
 
             statement = 'CREATE TABLE IF NOT EXISTS settings (' \
