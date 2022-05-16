@@ -85,9 +85,8 @@ class core:
         self._qualityDict = self._getQualityDict()
         self._requests_session = requests.Session()
         if self._getLatest():
-            pass
-            # for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
-            #     self._getList(url)
+            for url in ('/most-watched/', '/top-movies/', '/opening-this-week/', '/coming-soon/'):
+                self._getList(url)
 
         self._con.close()
 
@@ -100,9 +99,10 @@ class core:
     def _getLatest(self):
         url = f'/page/{self._page_begin}/'
         i = 0
+        order_id = 0
 
         while url is not None:
-            url = self._parseLatestSite(url)
+            url, order_id = self._parseLatestSite(url, order_id)
             i += 1
             if self._page_count is not None:
                 if i > self._page_count:
@@ -110,7 +110,7 @@ class core:
 
         return True
 
-    def _parseLatestSite(self, url):
+    def _parseLatestSite(self, url, order_id):
         _hash, content = self._getContent(url)
 
         items = content.find_all('td', class_='indexTableTrailerImage')
@@ -118,8 +118,9 @@ class core:
             for item in items:
                 link = item.find('a')
                 if link is not None:
-                    if not self._parseMovieSite(link['href']):
-                        return None
+                    success, order_id = self._parseMovieSite(link['href'], order_id)
+                    if not success:
+                        return None, None
 
         navigation = content.find('div', class_='libraryLinks nav-links-top')
         nav_items = navigation.find_all('a', class_='startLink')
@@ -128,9 +129,9 @@ class core:
             if nav_item is not None:
                 _item = next(nav_item, None)
                 if _item is not None:
-                    return _item['href']
+                    return _item['href'], order_id
 
-        return None
+        return None, None
 
     def _getContent(self, url):
 
@@ -159,7 +160,7 @@ class core:
 
                 time.sleep(60)
 
-    def _parseMovieSite(self, url):
+    def _parseMovieSite(self, url, order_id):
         if url is not None:
             _hash, content = self._getContent(url)
 
@@ -167,21 +168,22 @@ class core:
             movie = DL_items.getItem(self._con, self._project_id, str(movie_id))
             if not self._suppressSkip:
                 if movie is not None and movie[1] == _hash:
-                    return False
+                    return False, order_id
 
             _movie = self._getMovieDetails(movie_id, _hash, content)
             if _movie is not None:
+                order_id += 1
                 if movie is None:
-                    item_id = self._insertMovie(_movie)
+                    item_id = self._insertMovie(_movie, order_id)
                     self._insertTrailers(item_id, _movie['trailers'])
 
                 else:
                     item_id = movie[0]
                     self._deletedTrailers += DL_subItems.deleteSubItemByItemId(self._con, item_id)
-                    self._updateMovie(item_id, _movie)
+                    self._updateMovie(item_id, _movie, order_id)
                     self._insertTrailers(item_id, _movie['trailers'])
 
-            return True
+            return True, order_id
 
     @staticmethod
     def _getMovieId(content):
@@ -358,7 +360,7 @@ class core:
             except InvalidOperation:
                 return 0
 
-    def _insertMovie(self, movie):
+    def _insertMovie(self, movie, order_id):
         item = (
             self._project_id,
             movie['movie_id'],
@@ -367,7 +369,8 @@ class core:
             movie['plot'],
             self._itemTagDict['None'],
             movie['poster'],
-            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S'),
+            order_id
         )
 
         row_count, item_id = DL_items.insertItem(self._con, item)
@@ -440,14 +443,15 @@ class core:
 
                 DL_links.insertLink(self._con, item)
 
-    def _updateMovie(self, item_id, movie):
+    def _updateMovie(self, item_id, movie, order_id):
         item = (
             movie['hash'],
             movie['title'],
             movie['plot'],
             self._itemTagDict['None'],
             movie['poster'],
-            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S')
+            tools.datetimeToString(movie['date'], '%Y-%m-%d %H:%M:%S'),
+            order_id
         )
 
         self._editedShows += DL_items.updateItem(self._con, item_id, item)

@@ -181,7 +181,8 @@ class ardmediathekCore:
                     widget['synopsis'],
                     self._getTag_id(title),
                     show['images']['aspect16x9']['src'],
-                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S')
+                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                    None
                 )
 
                 row_count, item_id = DL_items.insertItem(self._con, item)

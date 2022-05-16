@@ -129,6 +129,7 @@ class databaseCore:
                         '   tag_id INT NOT NULL,' \
                         '   poster_url VARCHAR(255),' \
                         '   order_date DATETIME NOT NULL,' \
+                        '   order_id INT,' \
                         '   PRIMARY KEY (`item_id`)' \
                         ');'
 
@@ -208,7 +209,7 @@ class databaseCore:
                         '   FROM items AS i' \
                         '   LEFT JOIN projects AS p ON i.project_id = p.project_id' \
                         '   LEFT JOIN item_tags AS it ON i.tag_id = it.tag_id' \
-                        '   ORDER BY i.order_date DESC;'
+                        '   ORDER BY i.order_date DESC, i.order_id ASC;'
 
             databaseHelper.executeNonQuery(con, statement)
 
@@ -226,7 +227,9 @@ class databaseCore:
                         '   LEFT JOIN links AS li ON si.subItem_id = li.subItem_id' \
                         '   LEFT JOIN qualities AS q ON li.quality_id = q.quality_id' \
                         '' \
-                        '   ORDER BY i.order_date DESC, si.broadcastOn_date DESC;'
+                        '   ORDER BY i.order_date DESC, i.order_id ASC, si.broadcastOn_date DESC;'
+
+            # '   ORDER BY i.order_date DESC, si.broadcastOn_date DESC;'
 
             databaseHelper.executeNonQuery(con, statement)
 
