@@ -205,7 +205,8 @@ class databaseCore:
 
             statement = 'CREATE VIEW viewItems AS' \
                         '   SELECT ' \
-                        '      i.item_id, p.name as project, i.title, i.plot, it.name AS tag, i.poster_url ' \
+                        '      i.item_id, p.name as project, i.title, i.plot, it.name AS tag, i.poster_url,' \
+                        '      i.order_date, i.order_id' \
                         '   FROM items AS i' \
                         '   LEFT JOIN projects AS p ON i.project_id = p.project_id' \
                         '   LEFT JOIN item_tags AS it ON i.tag_id = it.tag_id' \
@@ -218,7 +219,7 @@ class databaseCore:
                         '      i.item_id, p.name as project, i.title, i.plot, it.name AS tag, i.poster_url, ' \
                         '      si.subitem_id, si.title AS si_title, sit.name AS si_tag, si.broadcastOn_date, ' \
                         '      si.availableTo_date, si.duration, li.link_id, q.name AS quality, li.best_quality, ' \
-                        '      li.hoster, li.size, li.url  ' \
+                        '      li.hoster, li.size, li.url, order_date, order_id' \
                         '   FROM items AS i' \
                         '   LEFT JOIN projects AS p ON i.project_id = p.project_id' \
                         '   LEFT JOIN item_tags AS it ON i.tag_id = it.tag_id' \
@@ -228,8 +229,6 @@ class databaseCore:
                         '   LEFT JOIN qualities AS q ON li.quality_id = q.quality_id' \
                         '' \
                         '   ORDER BY i.order_date DESC, i.order_id ASC, si.broadcastOn_date DESC;'
-
-            # '   ORDER BY i.order_date DESC, si.broadcastOn_date DESC;'
 
             databaseHelper.executeNonQuery(con, statement)
 
