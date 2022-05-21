@@ -8,25 +8,26 @@ import requests
 from bs4 import BeautifulSoup
 from decimal import Decimal, InvalidOperation
 
-from KodiWebGrabber.libs.common import tools
-from KodiWebGrabber.libs.core.databaseHelper import databaseHelper
-from KodiWebGrabber.libs.core.databaseCore import databaseCore
-from KodiWebGrabber.libs.core.Datalayer.DL_itemTags import DL_itemTags
-from KodiWebGrabber.libs.core.Datalayer.DL_links import DL_links
-from KodiWebGrabber.libs.core.Datalayer.DL_listIdentifiers import DL_listIdentifiers
-from KodiWebGrabber.libs.core.Datalayer.DL_lists import DL_lists
-from KodiWebGrabber.libs.core.Datalayer.DL_projects import DL_projects
-from KodiWebGrabber.libs.core.Datalayer.DL_qualities import DL_qualities
-from KodiWebGrabber.libs.core.Datalayer.DL_subitemTags import DL_subitemTags
-from KodiWebGrabber.libs.core.Datalayer.DL_items import DL_items
-from KodiWebGrabber.libs.core.Datalayer.DL_subItems import DL_subItems
+from libs.common import tools
+from libs.core.databaseHelper import databaseHelper
+from libs.core.databaseCore import databaseCore
+from libs.core.Datalayer.DL_itemTags import DL_itemTags
+from libs.core.Datalayer.DL_links import DL_links
+from libs.core.Datalayer.DL_listIdentifiers import DL_listIdentifiers
+from libs.core.Datalayer.DL_lists import DL_lists
+from libs.core.Datalayer.DL_projects import DL_projects
+from libs.core.Datalayer.DL_qualities import DL_qualities
+from libs.core.Datalayer.DL_subitemTags import DL_subitemTags
+from libs.core.Datalayer.DL_items import DL_items
+from libs.core.Datalayer.DL_subItems import DL_subItems
+from libs.core.tmdbCore import tmdbCore
 
 __VERSION__ = '0.1.0'
 __TYPE__ = 'plugin'
 __TEMPLATE__ = 'hdtrailers'
 __PID__ = 'HDTrailers.pid'
 
-from KodiWebGrabber.libs.core.tmdbCore import tmdbCore
+
 
 
 def register():
