@@ -91,7 +91,7 @@ def getPlugins():
 
     cwd = os.path.join(os.getcwd(), 'plugins')
     for f in os.listdir(cwd):
-        if isfile(os.path.join(cwd, f)):
+        if isfile(os.path.join(cwd, f)) and f[-3:] == '.py':
             try:
                 m = importlib.import_module('plugins.' + f[:-3])
                 plugin = m.register()
