@@ -40,4 +40,3 @@ class core(ardmediathekCore):
             return self._itemTagDict['MUSICCLIP']
 
         return self._itemTagDict['None']
-

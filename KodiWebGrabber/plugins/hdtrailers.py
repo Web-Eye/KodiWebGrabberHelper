@@ -28,8 +28,6 @@ __TEMPLATE__ = 'hdtrailers'
 __PID__ = 'HDTrailers.pid'
 
 
-
-
 def register():
     if __TYPE__ == 'plugin':
         return {

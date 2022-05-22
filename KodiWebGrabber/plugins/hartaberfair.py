@@ -39,4 +39,3 @@ class core(ardmediathekCore):
             return self._itemTagDict['SIGNLANGUAGE']
 
         return self._itemTagDict['None']
-

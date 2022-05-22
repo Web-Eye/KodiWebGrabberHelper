@@ -49,6 +49,3 @@ class tmdbCore:
             return self._posterBaseUrl + posterPath
 
         return None
-
-
-
