@@ -101,7 +101,7 @@ class ardmediathekCore:
         return None
 
     def _deleteExpiredShows(self):
-        self._deletedShows += DL_items.deleteExpiredItems(self._con, self._core_id)
+        self._deletedShows += DL_items.deleteExpiredItems(self._con, self._project_id)
 
     def _getContent(self, requests_session, url):
         conn_tries = 0
