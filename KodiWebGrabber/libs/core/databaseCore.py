@@ -29,7 +29,8 @@ class databaseCore:
             print(f"Error connecting to MariaDB Platform: {e}")
             return False
 
-    def get_database_version(self, con):
+    @staticmethod
+    def get_database_version(con):
         if not databaseHelper.tableExists(con, databaseCore.DB_NAME, 'settings'):
             return 0
 
@@ -56,7 +57,8 @@ class databaseCore:
         con.close()
         return True
 
-    def _update_database(self, con, dbVersion):
+    @staticmethod
+    def _update_database(con, dbVersion):
 
         if dbVersion == 0:
 
@@ -232,6 +234,15 @@ class databaseCore:
 
             databaseHelper.executeNonQuery(con, statement)
 
+            statement = 'CREATE VIEW viewLists AS' \
+                        '   SELECT p.name AS project, li.name AS identifier, l.item_id, l.order_id' \
+                        '   FROM lists AS l' \
+                        '   LEFT JOIN projects AS p ON l.project_id = p.project_id' \
+                        '   LEFT JOIN list_identifier AS li ON l.identifier_id = li.identifier_id' \
+                        '   ORDER BY l.project_id, l.identifier_id, order_id;'
+
+            databaseHelper.executeNonQuery(con, statement)
+
             statement = 'CREATE TRIGGER `trgDeleteItem` AFTER DELETE ON `items` FOR EACH ROW BEGIN' \
                         '   DELETE FROM sub_items WHERE sub_items.item_id = OLD.item_id;' \
                         '   DELETE FROM lists WHERE lists.item_id = OLD.item_id;' \
@@ -247,4 +258,3 @@ class databaseCore:
 
             DL_settings.setSetting(con, 'database_version', '1')
             return 1
-
