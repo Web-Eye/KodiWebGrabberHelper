@@ -31,6 +31,11 @@ __VERSION__ = '1.2.0+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
+def setCurrentDirectory():
+    scriptdir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(scriptdir)
+
+
 def runTemplate(plugins, template, config, addArgs):
     if plugins is not None and len(plugins) > 0 and template is not None and template:
         plugin = next(filter(lambda p: p.get('template') == template, plugins), None)
@@ -205,4 +210,5 @@ def main():
 
 
 if __name__ == '__main__':
+    setCurrentDirectory()
     main()
