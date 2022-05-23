@@ -10,4 +10,3 @@ class DL_links:
 
         rowCount, link_id = databaseHelper.executeNonQuery(con, statement, item)
         return link_id
-

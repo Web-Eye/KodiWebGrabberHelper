@@ -261,6 +261,7 @@ class ardmediathekCore:
         return _dict
 
     def _getSubitemTag_id(self, title):
+        _title = title
         return self._subitemTagDict['None']
 
     def _getQuality_id(self, quality):

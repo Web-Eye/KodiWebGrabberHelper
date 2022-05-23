@@ -15,4 +15,3 @@ class DL_subItems:
         statement = 'DELETE FROM sub_items WHERE item_id = ?'
         row_count, _id = databaseHelper.executeNonQuery(con, statement, (item_id,))
         return row_count
-

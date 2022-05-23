@@ -11,8 +11,8 @@ class DL_items:
 
     @staticmethod
     def insertItem(con, item):
-        statement = 'INSERT INTO items (project_id, identifier, hash, title, plot, tag_id, poster_url, order_date, order_id) ' \
-                    'VALUES (?, ?, UNHEX(?), ?, ?, ?, ?, ?, ?);'
+        statement = 'INSERT INTO items (project_id, identifier, hash, title, plot, tag_id, poster_url, order_date, ' \
+                    'order_id) VALUES (?, ?, UNHEX(?), ?, ?, ?, ?, ?, ?);'
 
         return databaseHelper.executeNonQuery(con, statement, item)
 
@@ -77,5 +77,3 @@ class DL_items:
 
         row_count, _id = databaseHelper.executeNonQuery(con, statement, (project_id,))
         return row_count
-
-

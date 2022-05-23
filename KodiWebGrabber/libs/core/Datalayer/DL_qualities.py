@@ -8,7 +8,7 @@ class DL_qualities:
         query = 'SELECT quality_id FROM qualities WHERE name = ?;'
         quality_id = databaseHelper.executeScalar(con, query, (quality, ))
         if quality_id is None:
-            tag_id = 0
+            quality_id = 0
         return quality_id
 
     @staticmethod
