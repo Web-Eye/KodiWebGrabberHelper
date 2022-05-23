@@ -19,8 +19,8 @@ class DL_listIdentifiers:
 
     @staticmethod
     def getOrInsertItem(con, entity):
-        identifier_id = DL_projects.getItem(con, entity)
+        identifier_id = DL_listIdentifiers.getItem(con, entity)
         if identifier_id == 0:
-            _, identifier_id = DL_projects.insertItem(con, entity)
+            _, identifier_id = DL_listIdentifiers.insertItem(con, entity)
 
         return identifier_id
