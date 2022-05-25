@@ -20,6 +20,8 @@ import time
 import urllib
 import urllib.parse
 import hashlib
+from datetime import date
+
 import requests
 
 from bs4 import BeautifulSoup
@@ -218,9 +220,8 @@ class core:
             if plot_block is not None:
                 plot = str(plot_block.find('span').getText()).strip()
             poster = urllib.parse.urljoin("http:", info.find('img')['src'])
-            if '-146-poster-xlarge-resized.jpg' in poster:
-                poster = self._getAlternatePoster(title, poster)
-            latestDate, trailerCollection = self._getTrailerCollection(content)
+            latestDate, lastestTrailerDate, trailerCollection = self._getTrailerCollection(content)
+            poster = self._getAlternatePoster(title, plot, lastestTrailerDate, poster)
 
             if tools.getLength(trailerCollection) > 0:
                 return {
@@ -240,6 +241,7 @@ class core:
         trailer_name = ''
         trailer_date = ''
         latest_date = None
+        latest_trailer_date = None
 
         i = 0
 
@@ -254,6 +256,8 @@ class core:
             if link.name == 'td' and link.has_attr('class') and link['class'][0] == 'bottomTableSet':
                 if tools.getLength(trailer_links) > 0:
                     latest_date = tools.maxDate(trailer_date, latest_date)
+                    if trailer_type == 'TRAILER':
+                        latest_trailer_date = tools.maxDate(trailer_date, latest_trailer_date)
                     trailer_collection.append(
                         {
                             'name': trailer_name,
@@ -269,6 +273,8 @@ class core:
             elif link.name == 'tr' and link.has_attr('itemprop') and link['itemprop'] == 'trailer':
                 if tools.getLength(trailer_links) > 0:
                     latest_date = tools.maxDate(trailer_date, latest_date)
+                    if trailer_type == 'TRAILER':
+                        latest_trailer_date = tools.maxDate(trailer_date, latest_trailer_date)
                     trailer_collection.append(
                         {
                             'name': trailer_name,
@@ -291,6 +297,8 @@ class core:
 
         if tools.getLength(trailer_links) > 0:
             latest_date = tools.maxDate(trailer_date, latest_date)
+            if trailer_type == 'TRAILER':
+                latest_trailer_date = tools.maxDate(trailer_date, latest_trailer_date)
             trailer_collection.append(
                 {
                     'name': trailer_name,
@@ -301,9 +309,9 @@ class core:
             )
 
         if tools.getLength(trailer_collection) > 0:
-            return latest_date, trailer_collection
+            return latest_date, latest_trailer_date, trailer_collection
 
-        return None, None
+        return None, None, None
 
     @staticmethod
     def _getTrailerType(link):
@@ -529,16 +537,17 @@ class core:
 
         return None
 
-    def _getAlternatePoster(self, title, default):
+    def _getAlternatePoster(self, title, plot, order_date, default):
 
         if self._tmdb is None:
             self._tmdb = tmdbCore()
 
         movie = self._tmdb.searchMovie(title)
         if movie is not None:
-            posterPath = self._tmdb.getPosterPath(movie)
-            url = self._tmdb.getPosterUrl(posterPath)
-            if url is not None:
-                return url
+            posterPath = self._tmdb.getPosterPath(movie, title, plot, order_date)
+            if posterPath is not None:
+                url = self._tmdb.getPosterUrl(posterPath)
+                if url is not None:
+                    return True, url
 
-        return default
+        return False, default
