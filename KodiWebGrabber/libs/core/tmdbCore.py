@@ -54,28 +54,25 @@ class tmdbCore:
     @staticmethod
     def getPosterPath(page, title, plot, order_date):
 
-        if 'result' in page and page['results'] is not None and len(page['results']) > 0:
+        valid_movies = list(filter(lambda item: 'title' in item and 'overview' in item, page['results']))
+        if len(valid_movies) > 0:
+            exact_list = list(filter(lambda item: item['title'].lower() == title.lower(), valid_movies))
+            if len(exact_list) == 0:
+                exact_list = valid_movies
 
-            valid_movies = list(filter(lambda item: 'original_title' in item and 'overview' in item, page['results']))
+            valid_movies = exact_list
+            exact_list = list(
+                filter(lambda item: 'release_date' not in item or item['release_date'] == '' or
+                                abs(order_date - tools.getDateTime(item['release_date'], '%Y-%m-%d')).days < 271,
+                       valid_movies))
 
-            if len(valid_movies) > 0:
-                exact_list = list(filter(lambda item: item['original_title'].lower() == title.lower(), valid_movies))
-                if len(exact_list) == 0:
-                    exact_list = valid_movies
-
-                valid_movies = exact_list
-                exact_list = list(
-                    filter(lambda item: 'release_date' not in item or item['release_date'] == '' or
-                                    abs(order_date - tools.getDateTime(item['release_date'], '%Y-%m-%d')).days < 271,
-                           valid_movies))
-
-                size = len(exact_list)
-                if size == 0:
-                    return tmdbCore._getPosterPath(valid_movies, plot)
-                elif size == 1:
-                    return exact_list[0]['poster_path']
-                else:
-                    return tmdbCore._getPosterPath(exact_list, plot)
+            size = len(exact_list)
+            if size == 0:
+                return tmdbCore._getPosterPath(valid_movies, plot)
+            elif size == 1:
+                return exact_list[0]['poster_path']
+            else:
+                return tmdbCore._getPosterPath(exact_list, plot)
 
         return None
 
@@ -149,17 +146,7 @@ class tmdbCore:
         plot = plot.replace(';', '')
         plot = plot.replace('-', '')
 
-        b = plot.find('(')
-        e = plot.find(')')
-
-        while -1 < b < e:
-            plot = plot[0: b:] + plot[e + 1::]
-            b = plot.find('(')
-            e = plot.find(')')
-
-        while plot.find('  ') > -1:
-            plot = plot.replace('  ', ' ')
-
+        plot = tools.removeBrackets(plot)
         return plot
 
     @staticmethod
@@ -171,17 +158,28 @@ class tmdbCore:
         plot1_words = plot1_cleared.split(' ')
         plot2_words = plot2_cleared.split(' ')
 
+        plot1_count = 0
+        plot2_count = 0
+
         for word in plot1_words:
             word = ' ' + word + ' '
-            if word in ' is a an and with of to he she it his her for be this because about this when that ':
+            if word in ' is a an and with of to he she it his her for be because about this when that but are ' \
+                       'aren\'t in ':
                 continue
 
+            plot1_count += 1
             if word in plot2_cleared:
                 retValue += 0.5
 
         if retValue > 0:
-            plot1_count = len(plot1_words)
-            plot2_count = len(plot2_words)
+
+            for word in plot2_words:
+                word = ' ' + word + ' '
+                if word in ' is a an and with of to he she it his her for be because about this when that but are ' \
+                           'aren\'t in ':
+                    continue
+
+                plot2_count += 1
 
             count = min(plot1_count, plot2_count)
             if (retValue * 2) / count < 0.35:

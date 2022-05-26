@@ -119,3 +119,28 @@ def estr(value, default=''):
         return str(value)
 
     return default
+
+
+def containsBrackets(value):
+    b = value.find('(')
+    e = value.find(')')
+
+    if -1 < b < e:
+        return True
+
+    return False
+
+
+def removeBrackets(value):
+    b = value.find('(')
+    e = value.find(')')
+
+    while -1 < b < e:
+        value = value[0: b:] + value[e + 1::]
+        b = value.find('(')
+        e = value.find(')')
+
+    while value.find('  ') > -1:
+        value = value.replace('  ', ' ')
+
+    return value

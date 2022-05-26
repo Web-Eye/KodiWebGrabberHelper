@@ -20,6 +20,7 @@ __TYPE__ = 'plugin'
 __TEMPLATE__ = 'hdtcf'
 __PID__ = 'HDTCF.pid'
 
+from libs.common import tools
 from libs.core.Datalayer.DL_projects import DL_projects
 from libs.core.Datalayer.DL_subitemTags import DL_subitemTags
 from libs.core.databaseCore import databaseCore
@@ -54,7 +55,8 @@ class core:
 
         query = 'SELECT i.item_id, i.title, plot, poster_url, MAX(su.broadcastOn_date) FROM items i ' \
                 'INNER JOIN sub_items su ON i.item_id = su.item_id ' \
-                'WHERE project_id = ? and su.tag_id = ? GROUP BY i.item_id ' \
+                'WHERE project_id = ? AND poster_url LIKE \'%static.hd-trailers.net/images/%\' ' \
+                'GROUP BY i.item_id ' \
                 'ORDER BY order_date DESC, order_id ASC'
 
         cursor = databaseHelper.executeReader(self._con, query, (project_id, tag_id, ))
@@ -81,7 +83,7 @@ class core:
         if self._tmdb is None:
             self._tmdb = tmdbCore()
 
-        movie = self._tmdb.searchMovie(title)
+        title, movie = self._searchMovie(title)
         if movie is not None:
             posterPath = self._tmdb.getPosterPath(movie, title, plot, order_date)
             if posterPath is not None:
@@ -90,3 +92,18 @@ class core:
                     return True, url
 
         return False, default
+
+    def _searchMovie(self, title):
+        page = None
+
+        while True:
+            page = self._tmdb.searchMovie(title)
+            if page is not None and 'results' in page and page['results'] is not None and len(page['results']) > 0:
+                break
+
+            if not tools.containsBrackets(title):
+                break
+
+            title = tools.removeBrackets(title)
+
+        return title, page
