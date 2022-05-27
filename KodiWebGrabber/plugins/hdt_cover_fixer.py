@@ -101,6 +101,7 @@ class core:
             if page is not None and 'results' in page and page['results'] is not None and len(page['results']) > 0:
                 break
 
+            page = None
             if not tools.containsBrackets(title):
                 break
 
