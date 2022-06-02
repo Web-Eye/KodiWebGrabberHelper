@@ -221,7 +221,7 @@ class core:
                 plot = str(plot_block.find('span').getText()).strip()
             poster = urllib.parse.urljoin("http:", info.find('img')['src'])
             latestDate, lastestTrailerDate, trailerCollection = self._getTrailerCollection(content)
-            poster = self._getAlternatePoster(title, plot, lastestTrailerDate, poster)
+            _, poster = self._getAlternatePoster(title, plot, lastestTrailerDate, poster)
 
             if tools.getLength(trailerCollection) > 0:
                 return {
