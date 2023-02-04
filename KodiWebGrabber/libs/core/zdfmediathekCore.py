@@ -65,7 +65,7 @@ class zdfmediathekCore:
         self._baseurl = f'https://zdf-cdn.live.cellular.de/mediathekV2/document/{mediathek_id}'
 
     def run(self):
-        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._con = databaseHelper.getConnection(self._config)
         self._requests_session = requests.Session()
 
         self._project_id = DL_projects.getOrInsertItem(self._con, self._core_id)

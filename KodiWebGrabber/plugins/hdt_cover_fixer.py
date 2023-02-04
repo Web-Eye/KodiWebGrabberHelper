@@ -49,7 +49,7 @@ class core:
         self._tmdb = None
 
     def run(self):
-        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._con = databaseHelper.getConnection(self._config)
         project_id = DL_projects.getOrInsertItem(self._con, self._core_id)
         tag_id = DL_subitemTags.getOrInsertItem(self._con, 'TRAILER')
 

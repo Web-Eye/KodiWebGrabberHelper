@@ -20,7 +20,6 @@ import time
 import urllib
 import urllib.parse
 import hashlib
-from datetime import date
 
 import requests
 
@@ -29,7 +28,6 @@ from decimal import Decimal, InvalidOperation
 
 from libs.common import tools
 from libs.core.databaseHelper import databaseHelper
-from libs.core.databaseCore import databaseCore
 from libs.core.Datalayer.DL_itemTags import DL_itemTags
 from libs.core.Datalayer.DL_links import DL_links
 from libs.core.Datalayer.DL_listIdentifiers import DL_listIdentifiers
@@ -95,7 +93,7 @@ class core:
         self._baseurl = 'http://www.hd-trailers.net/'
 
     def run(self):
-        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._con = databaseHelper.getConnection(self._config)
 
         self._project_id = DL_projects.getOrInsertItem(self._con, self._core_id)
         self._itemTagDict = self._getItemTags()

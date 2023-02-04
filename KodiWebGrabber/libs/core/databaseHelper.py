@@ -21,13 +21,13 @@ import mariadb
 class databaseHelper:
 
     @staticmethod
-    def getConnection(config, database_name=None):
+    def getConnection(config):
         return mariadb.connect(
             host=config['host'],
             port=config['port'],
             user=config['user'],
             password=config['password'],
-            database=database_name
+            database=config['database']
         )
 
     @staticmethod

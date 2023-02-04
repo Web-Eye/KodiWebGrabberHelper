@@ -27,7 +27,7 @@ from libs.common.PIDhandler import PIDhandler
 from libs.core.databaseCore import databaseCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
-__VERSION__ = '1.3.0+Beta'
+__VERSION__ = '1.3.1+Beta'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
@@ -64,6 +64,7 @@ def doInputConfig():
     port = input('Enter the MariaDB port (3306): ')
     user = input('Enter the MariaDB username: ')
     password = input('Enter the users password: ')
+    database = input('Enter the database: ')
 
     if host == '':
         host = 'localhost'
@@ -76,7 +77,8 @@ def doInputConfig():
         'host': host,
         'port': int(port),
         'user': user,
-        'password': password
+        'password': password,
+        'database': database
     }
 
     SaveConfig(configFile, config)
@@ -102,6 +104,10 @@ def isValidConfig(config):
 
     if 'password' not in config or config['password'] == '':
         return False
+
+    if 'database' not in config or config['database'] == '':
+        return False
+
     return True
 
 

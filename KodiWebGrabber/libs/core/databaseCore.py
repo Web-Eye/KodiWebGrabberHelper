@@ -24,7 +24,6 @@ from .databaseHelper import databaseHelper
 class databaseCore:
 
     CURRENT_DB_VERSION = 1
-    DB_NAME = 'KodiWebGrabber_Test'
 
     def __init__(self, config):
         self._config = config
@@ -35,9 +34,10 @@ class databaseCore:
 
         try:
 
+            DB_NAME = self._config['database']
             con = databaseHelper.getConnection(self._config)
-            if not databaseHelper.database_exists(con, databaseCore.DB_NAME):
-                retValue = databaseHelper.create_database(con, databaseCore.DB_NAME)
+            if not databaseHelper.database_exists(con, DB_NAME):
+                retValue = databaseHelper.create_database(con, DB_NAME)
 
             con.close()
             return retValue
@@ -46,9 +46,8 @@ class databaseCore:
             print(f"Error connecting to MariaDB Platform: {e}")
             return False
 
-    @staticmethod
-    def get_database_version(con):
-        if not databaseHelper.tableExists(con, databaseCore.DB_NAME, 'settings'):
+    def get_database_version(self, con):
+        if not databaseHelper.tableExists(con, self._config['database'], 'settings'):
             return 0
 
         retValue = DL_settings.getSetting(con, 'database_version')
@@ -65,7 +64,7 @@ class databaseCore:
         return False
 
     def update_database(self):
-        con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        con = databaseHelper.getConnection(self._config)
         dbVersion = self.get_database_version(con)
 
         while dbVersion < databaseCore.CURRENT_DB_VERSION:

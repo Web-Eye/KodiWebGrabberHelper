@@ -63,7 +63,7 @@ class ardmediathekCore:
                         '&withAudiodescription=false&withOriginalWithSubtitle=false&withOriginalversion=false '
 
     def run(self):
-        self._con = databaseHelper.getConnection(self._config, databaseCore.DB_NAME)
+        self._con = databaseHelper.getConnection(self._config)
 
         self._project_id = DL_projects.getOrInsertItem(self._con, self._core_id)
         self._itemTagDict = self._getItemTags()
