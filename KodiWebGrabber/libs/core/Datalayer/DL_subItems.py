@@ -21,6 +21,12 @@ from ..databaseHelper import databaseHelper
 class DL_subItems:
 
     @staticmethod
+    def existsSubItem(con, item_id, title):
+        query = 'SELECT subItem_id FROM sub_items WHERE item_id = ? AND title = ?;'
+        subItem_id = databaseHelper.executeScalar(con, query, (item_id, title,))
+        return subItem_id
+
+    @staticmethod
     def insertSubItem(con, item):
         statement = 'INSERT INTO sub_items (item_id, title, tag_id, broadcastOn_date, availableTo_date, duration) ' \
                     'VALUES (?, ?, ?, ?, ?, ?);'
