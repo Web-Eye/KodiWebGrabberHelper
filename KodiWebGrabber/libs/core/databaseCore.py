@@ -23,7 +23,7 @@ from .databaseHelper import databaseHelper
 
 class databaseCore:
 
-    CURRENT_DB_VERSION = 1
+    CURRENT_DB_VERSION = 2
 
     def __init__(self, config):
         self._config = config
@@ -273,4 +273,19 @@ class databaseCore:
             databaseHelper.executeNonQuery(con, statement)
 
             DL_settings.setSetting(con, 'database_version', '1')
-            return 1
+            dbVersion = 1
+
+            if dbVersion == 1:
+                statement = 'ALTER TABLE IF EXISTS projects ADD COLUMN IF NOT EXISTS description VARCHAR(255) NULL, ' \
+                            '                               ADD COLUMN IF NOT EXISTS parent_id INT NULL;'
+
+                databaseHelper.executeNonQuery(con, statement)
+
+                statement = 'ALTER TABLE IF EXISTS items ADD COLUMN IF NOT EXISTS played BIT NULL;'
+                databaseHelper.executeNonQuery(con, statement)
+
+                statement = 'ALTER TABLE IF EXISTS sub_items ADD COLUMN IF NOT EXISTS played BIT NULL;'
+                databaseHelper.executeNonQuery(con, statement)
+
+                DL_settings.setSetting(con, 'database_version', '2')
+                return 2

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 WebEye
+# Copyright 2023 WebEye
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,15 +29,15 @@ class DL_projects:
         return project_id
 
     @staticmethod
-    def insertItem(con, project):
-        statement = 'INSERT INTO projects (name) VALUES (?);'
+    def insertItem(con, project, description=None, parent_id=None):
+        statement = 'INSERT INTO projects (name, description, parent_id) VALUES (?, ?, ?);'
 
-        return databaseHelper.executeNonQuery(con, statement, (project, ))
+        return databaseHelper.executeNonQuery(con, statement, (project, description, parent_id))
 
     @staticmethod
-    def getOrInsertItem(con, project):
+    def getOrInsertItem(con, project, description=None, parent_id=None):
         _project_id = DL_projects.getItem(con, project)
         if _project_id == 0:
-            _, _project_id = DL_projects.insertItem(con, project)
+            _, _project_id = DL_projects.insertItem(con, project, description, parent_id)
 
         return _project_id
