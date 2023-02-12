@@ -541,7 +541,7 @@ class core:
             self._tmdb = tmdbCore()
 
         movie = self._tmdb.searchMovie(title)
-        if movie is not None:
+        if movie is not None and movie['success']:
             posterPath = self._tmdb.getPosterPath(movie, title, plot, order_date)
             if posterPath is not None:
                 url = self._tmdb.getPosterUrl(posterPath)
