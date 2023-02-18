@@ -23,21 +23,55 @@ class DL_projects:
     @staticmethod
     def getItem(con, project):
         query = 'SELECT IFNULL(project_id, 0) FROM projects WHERE name = ?;'
-        project_id = databaseHelper.executeScalar(con, query, (project, ))
+        project_id = databaseHelper.executeScalar(con, query, (project,))
         if project_id is None:
             project_id = 0
         return project_id
 
     @staticmethod
-    def insertItem(con, project, description=None, parent_id=None):
-        statement = 'INSERT INTO projects (name, description, parent_id) VALUES (?, ?, ?);'
+    def getItemDetails(con, project_id):
+        cursor = databaseHelper.executeReader(con, 'SELECT name, description, parent_id, plot, icon_url FROM projects '
+                                                   'WHERE project_id = ?', (project_id,))
 
-        return databaseHelper.executeNonQuery(con, statement, (project, description, parent_id))
+        row = cursor.fetchone()
+        if row is not None:
+            item = {
+                'name': row[0],
+                'description': row[1],
+                'parent_id': row[2],
+                'plot': row[3],
+                'icon_url': row[4]
+            }
+
+            return item
+
+        return None
 
     @staticmethod
-    def getOrInsertItem(con, project, description=None, parent_id=None):
+    def updateItem(con, project_id, item):
+        statement = 'UPDATE projects ' \
+                    '   SET' \
+                    '       name = ?' \
+                    '      ,description = ?' \
+                    '      ,parent_id = ?' \
+                    '      ,plot = ?' \
+                    '      ,icon_url = ?' \
+                    '   WHERE project_id = ?'
+
+        item = item + (project_id,)
+        row_count, _id = databaseHelper.executeNonQuery(con, statement, item)
+        return row_count
+
+    @staticmethod
+    def insertItem(con, project, description=None, parent_id=None, plot=None, icon_url=None):
+        statement = 'INSERT INTO projects (name, description, parent_id, plot, icon_url) VALUES (?, ?, ?, ?, ?);'
+
+        return databaseHelper.executeNonQuery(con, statement, (project, description, parent_id, plot, icon_url))
+
+    @staticmethod
+    def getOrInsertItem(con, project, description=None, parent_id=None, plot=None, icon_url=None):
         _project_id = DL_projects.getItem(con, project)
         if _project_id == 0:
-            _, _project_id = DL_projects.insertItem(con, project, description, parent_id)
+            _, _project_id = DL_projects.insertItem(con, project, description, parent_id, plot, icon_url)
 
         return _project_id
