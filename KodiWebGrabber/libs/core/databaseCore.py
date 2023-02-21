@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 WebEye
+# Copyright 2023 WebEye
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ from .databaseHelper import databaseHelper
 
 class databaseCore:
 
-    CURRENT_DB_VERSION = 3
+    CURRENT_DB_VERSION = 4
 
     def __init__(self, config):
         self._config = config
@@ -297,5 +297,40 @@ class databaseCore:
             databaseHelper.executeNonQuery(con, statement)
             DL_settings.setSetting(con, 'database_version', '3')
             dbVersion = 3
+
+        if dbVersion == 3:
+            statement = 'ALTER VIEW viewItems AS' \
+                        '   SELECT ' \
+                        '      i.item_id, p.name as project, i.title, i.plot, it.name AS tag, i.poster_url,' \
+                        '      IFNULL(i.played, false) AS played, i.order_date, i.order_id' \
+                        '   FROM items AS i' \
+                        '   LEFT JOIN projects AS p ON i.project_id = p.project_id' \
+                        '   LEFT JOIN item_tags AS it ON i.tag_id = it.tag_id' \
+                        '   ORDER BY i.order_date DESC, i.order_id ASC;'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            statement = 'ALTER VIEW viewItemLinks AS' \
+                        '   SELECT ' \
+                        '      i.item_id, p.name as project, i.title, i.plot, it.name AS tag, i.poster_url, ' \
+                        '      IFNULL(i.played, false) AS item_played, si.subitem_id, si.title AS si_title, ' \
+                        '      sit.name AS si_tag, si.broadcastOn_date, ' \
+                        '      si.availableTo_date, si.duration, li.link_id, q.name AS quality, li.best_quality, ' \
+                        '      li.hoster, li.size, li.url, IFNULL(si.played, false) AS sub_item_played, order_date, ' \
+                        '      order_id' \
+                        '   FROM items AS i' \
+                        '   LEFT JOIN projects AS p ON i.project_id = p.project_id' \
+                        '   LEFT JOIN item_tags AS it ON i.tag_id = it.tag_id' \
+                        '   LEFT JOIN sub_items AS si ON i.item_id = si.item_id' \
+                        '   LEFT JOIN subitem_tags AS sit ON si.tag_id = sit.tag_id' \
+                        '   LEFT JOIN links AS li ON si.subItem_id = li.subItem_id' \
+                        '   LEFT JOIN qualities AS q ON li.quality_id = q.quality_id' \
+                        '' \
+                        '   ORDER BY i.order_date DESC, i.order_id ASC, si.broadcastOn_date DESC;'
+
+            databaseHelper.executeNonQuery(con, statement)
+
+            DL_settings.setSetting(con, 'database_version', '4')
+            dbVersion = 4
 
         return dbVersion
