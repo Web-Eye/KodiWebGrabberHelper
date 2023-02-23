@@ -28,8 +28,8 @@ class DL_subItems:
 
     @staticmethod
     def insertSubItem(con, item):
-        statement = 'INSERT INTO sub_items (item_id, title, tag_id, broadcastOn_date, availableTo_date, duration) ' \
-                    'VALUES (?, ?, ?, ?, ?, ?);'
+        statement = 'INSERT INTO sub_items (item_id, title, tag_id, broadcastOn_date, availableTo_date, duration, poster_url) ' \
+                    'VALUES (?, ?, ?, ?, ?, ?, ?);'
 
         return databaseHelper.executeNonQuery(con, statement, item)
 

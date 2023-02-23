@@ -447,7 +447,8 @@ class core:
                 self._subitemTagDict[trailer['type']],
                 tools.datetimeToString(trailer['date'], '%Y-%m-%d %H:%M:%S'),
                 None,
-                None
+                None,
+                None,
             )
 
             row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)

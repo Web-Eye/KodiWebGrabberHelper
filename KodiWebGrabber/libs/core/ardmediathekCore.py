@@ -212,6 +212,7 @@ class ardmediathekCore:
                     tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                     tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
                     show['duration'],
+                    None,
                 )
 
                 row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)

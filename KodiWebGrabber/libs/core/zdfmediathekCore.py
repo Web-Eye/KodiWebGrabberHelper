@@ -238,6 +238,7 @@ class zdfmediathekCore:
                     dt,
                     tools.convertDateTime(show['timetolive'],  '%d.%m.%Y %H:%M', '%Y-%m-%d %H:%M:%S'),
                     show['length'],
+                    None,
                 )
 
                 row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)
