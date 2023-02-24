@@ -23,7 +23,7 @@ from .databaseHelper import databaseHelper
 
 class databaseCore:
 
-    CURRENT_DB_VERSION = 5
+    CURRENT_DB_VERSION = 6
 
     def __init__(self, config):
         self._config = config
@@ -359,5 +359,12 @@ class databaseCore:
 
             DL_settings.setSetting(con, 'database_version', '5')
             dbVersion = 5
+
+        if dbVersion == 5:
+            statement = 'ALTER TABLE IF EXISTS projects ADD COLUMN IF NOT EXISTS fanart_url VARCHAR(255) NULL;'
+
+            databaseHelper.executeNonQuery(con, statement)
+            DL_settings.setSetting(con, 'database_version', '6')
+            dbVersion = 6
 
         return dbVersion
