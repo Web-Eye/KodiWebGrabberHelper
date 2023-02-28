@@ -74,6 +74,10 @@ class core:
             self._minWaittime = waittime[0]
             self._maxWaittime = waittime[1]
 
+        self._timeout = 10
+        if 'timeout' in addArgs:
+            self._timeout = addArgs['timeout']
+
         self._con = None
         self._requests_session = None
 
@@ -164,7 +168,7 @@ class core:
                     'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 }
 
-                page = self._requests_session.get(url, timeout=10, headers=headers)
+                page = self._requests_session.get(url, timeout=self._timeout, headers=headers)
                 _hash = hashlib.md5(page.content).hexdigest()
                 content = BeautifulSoup(page.content, 'lxml')
                 return _hash, content

@@ -51,6 +51,10 @@ class ardmediathekCore:
             self._minWaittime = waittime[0]
             self._maxWaittime = waittime[1]
 
+        self._timeout = 10
+        if 'timeout' in addArgs:
+            self._timeout = addArgs['timeout']
+
         self._con = None
 
         self._addedShows = 0
@@ -116,7 +120,7 @@ class ardmediathekCore:
                     'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 }
 
-                page = requests_session.get(url, timeout=10, headers=headers)
+                page = requests_session.get(url, timeout=self._timeout, headers=headers)
                 return json.loads(page.content)
 
             except requests.exceptions.ConnectionError as e:

@@ -54,6 +54,10 @@ class zdfmediathekCore:
             self._minWaittime = waittime[0]
             self._maxWaittime = waittime[1]
 
+        self._timeout = 10
+        if 'timeout' in addArgs:
+            self._timeout = addArgs['timeout']
+
         self._con = None
 
         self._addedShows = 0
@@ -132,7 +136,7 @@ class zdfmediathekCore:
                     headers['Origin'] = 'https://www.zdf.de'
                     headers['Sec-Fetch-Mode'] = 'cors'
 
-                page = self._requests_session.get(url, timeout=10, headers=headers)
+                page = self._requests_session.get(url, timeout=self._timeout, headers=headers)
                 return json.loads(page.content)
 
             except requests.exceptions.ConnectionError as e:
@@ -158,7 +162,7 @@ class zdfmediathekCore:
                     'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 }
 
-                page = self._requests_session.get(url, timeout=10, headers=headers)
+                page = self._requests_session.get(url, timeout=self._timeout, headers=headers)
                 content = BeautifulSoup(page.content, 'lxml')
                 return content
             except requests.exceptions.ConnectionError as e:

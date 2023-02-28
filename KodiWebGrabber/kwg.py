@@ -179,6 +179,11 @@ def main():
                         help='Waits in a range of seconds before sending the next request.',
                         )
 
+    parser.add_argument('-to', '--timeout',
+                        type=int,
+                        default=10
+                        )
+
     try:
         args = parser.parse_args()
     except SystemExit:
