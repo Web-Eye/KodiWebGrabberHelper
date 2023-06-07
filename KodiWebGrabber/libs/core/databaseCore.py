@@ -23,7 +23,7 @@ from .databaseHelper import databaseHelper
 
 class databaseCore:
 
-    CURRENT_DB_VERSION = 6
+    CURRENT_DB_VERSION = 7
 
     def __init__(self, config):
         self._config = config
@@ -366,5 +366,12 @@ class databaseCore:
             databaseHelper.executeNonQuery(con, statement)
             DL_settings.setSetting(con, 'database_version', '6')
             dbVersion = 6
+
+        if dbVersion == 6:
+            statement = 'ALTER TABLE IF EXISTS links MODIFY url VARCHAR(2048);'
+
+            databaseHelper.executeNonQuery(con, statement)
+            DL_settings.setSetting(con, 'database_version', '7')
+            dbVersion = 7
 
         return dbVersion
