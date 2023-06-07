@@ -115,6 +115,8 @@ class zdfmediathekCore:
         content = self._getJSONContent(self._baseurl)
 
         if content is not None:
+            mainShows = self._getMainShowContainer(content)
+            self._getShows(mainShows)
             shows = self._getShowsContainer(content)
             self._getShows(shows)
 
@@ -181,6 +183,13 @@ class zdfmediathekCore:
                     return c['teaser']
 
         return None
+
+    def _getMainShowContainer(self, content):
+        cluster = content['cluster']
+        if cluster is not None:
+            for c in cluster:
+                if c['type'] == 'teaserContent':
+                    return c['teaser']
 
     def _getShows(self, shows):
 
