@@ -54,6 +54,10 @@ class zdfmediathekCore:
             self._minWaittime = waittime[0]
             self._maxWaittime = waittime[1]
 
+        self._timeout = 10
+        if 'timeout' in addArgs:
+            self._timeout = addArgs['timeout']
+
         self._con = None
 
         self._addedShows = 0
@@ -62,7 +66,7 @@ class zdfmediathekCore:
         self._subitemTagDict = {}
 
         self._requests_session = None
-        self._baseurl = f'https://zdf-cdn.live.cellular.de/mediathekV2/document/{mediathek_id}'
+        self._baseurl = f'https://zdf-prod-futura.zdf.de/mediathekV2/document/{mediathek_id}'
 
     def run(self):
         self._con = databaseHelper.getConnection(self._config)
@@ -111,6 +115,8 @@ class zdfmediathekCore:
         content = self._getJSONContent(self._baseurl)
 
         if content is not None:
+            mainShows = self._getMainShowContainer(content)
+            self._getShows(mainShows)
             shows = self._getShowsContainer(content)
             self._getShows(shows)
 
@@ -132,7 +138,7 @@ class zdfmediathekCore:
                     headers['Origin'] = 'https://www.zdf.de'
                     headers['Sec-Fetch-Mode'] = 'cors'
 
-                page = self._requests_session.get(url, timeout=10, headers=headers)
+                page = self._requests_session.get(url, timeout=self._timeout, headers=headers)
                 return json.loads(page.content)
 
             except requests.exceptions.ConnectionError as e:
@@ -158,7 +164,7 @@ class zdfmediathekCore:
                     'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
                 }
 
-                page = self._requests_session.get(url, timeout=10, headers=headers)
+                page = self._requests_session.get(url, timeout=self._timeout, headers=headers)
                 content = BeautifulSoup(page.content, 'lxml')
                 return content
             except requests.exceptions.ConnectionError as e:
@@ -177,6 +183,13 @@ class zdfmediathekCore:
                     return c['teaser']
 
         return None
+
+    def _getMainShowContainer(self, content):
+        cluster = content['cluster']
+        if cluster is not None:
+            for c in cluster:
+                if c['type'] == 'teaserContent':
+                    return c['teaser']
 
     def _getShows(self, shows):
 
@@ -238,6 +251,7 @@ class zdfmediathekCore:
                     dt,
                     tools.convertDateTime(show['timetolive'],  '%d.%m.%Y %H:%M', '%Y-%m-%d %H:%M:%S'),
                     show['length'],
+                    None,
                 )
 
                 row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)

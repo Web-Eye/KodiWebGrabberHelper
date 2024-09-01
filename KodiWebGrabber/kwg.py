@@ -27,7 +27,7 @@ from libs.common.PIDhandler import PIDhandler
 from libs.core.databaseCore import databaseCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
-__VERSION__ = '1.3.1+Beta'
+__VERSION__ = '1.4.0'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
@@ -177,6 +177,11 @@ def main():
                         nargs=2,
                         metavar=('min waittime', 'max waittime'),
                         help='Waits in a range of seconds before sending the next request.',
+                        )
+
+    parser.add_argument('-to', '--timeout',
+                        type=int,
+                        default=10
                         )
 
     try:
