@@ -66,7 +66,7 @@ class zdfmediathekCore:
         self._subitemTagDict = {}
 
         self._requests_session = None
-        self._baseurl = f'https://zdf-cdn.live.cellular.de/mediathekV2/document/{mediathek_id}'
+        self._baseurl = f'https://zdf-prod-futura.zdf.de/mediathekV2/document/{mediathek_id}'
 
     def run(self):
         self._con = databaseHelper.getConnection(self._config)
