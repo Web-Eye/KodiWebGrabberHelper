@@ -27,7 +27,7 @@ from libs.common.PIDhandler import PIDhandler
 from libs.core.databaseCore import databaseCore
 from libs.common.tools import GetPIDFile, GetConfigFile, ReadConfig, SaveConfig
 
-__VERSION__ = '1.4.0'
+__VERSION__ = '1.4.1'
 __VERSIONSTRING__ = f'KodiWebGrabberHelper Version {__VERSION__}'
 
 
