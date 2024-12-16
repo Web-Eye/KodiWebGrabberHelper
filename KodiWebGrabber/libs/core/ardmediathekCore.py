@@ -28,7 +28,6 @@ from ..common import tools
 from .Datalayer.DL_links import DL_links
 from .Datalayer.DL_items import DL_items
 from .Datalayer.DL_subItems import DL_subItems
-from .databaseCore import databaseCore
 from .databaseHelper import databaseHelper
 
 
@@ -202,7 +201,7 @@ class ardmediathekCore:
                     widget['synopsis'],
                     self._getTag_id(title),
                     show['images']['aspect16x9']['src'],
-                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                    self._getDateTime(show['broadcastedOn']),
                     None
                 )
 
@@ -213,8 +212,8 @@ class ardmediathekCore:
                     item_id,
                     None,
                     self._getSubitemTag_id(None),
-                    tools.convertDateTime(show['broadcastedOn'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
-                    tools.convertDateTime(show['availableTo'], '%Y-%m-%dT%H:%M:%SZ', '%Y-%m-%d %H:%M:%S'),
+                    self._getDateTime(show['broadcastedOn']),
+                    self._getDateTime(show['availableTo']),
                     show['duration'],
                     None,
                 )
@@ -237,6 +236,13 @@ class ardmediathekCore:
                         DL_links.insertLink(self._con, item)
 
         return True
+
+    @staticmethod
+    def _getDateTime(srcDateTime):
+        if srcDateTime:
+            srcFmt = '%Y-%m-%dT%H:%M:%SZ' if not '.' in srcDateTime else '%Y-%m-%dT%H:%M:%S.%fZ'
+            dstFmt = '%Y-%m-%d %H:%M:%S'
+            return tools.convertDateTime(srcDateTime, srcFmt, dstFmt)
 
     def _addItemTag(self, _dict, tag):
         tag_id = DL_itemTags.getOrInsertItem(self._con, tag)
