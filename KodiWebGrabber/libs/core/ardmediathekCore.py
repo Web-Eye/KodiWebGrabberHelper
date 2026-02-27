@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 WebEye
+# Copyright 2026 WebEye
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -82,15 +82,21 @@ class ardmediathekCore:
 
     @staticmethod
     def _getBestQuality(mediastreamarray):
+        li = list(filter(lambda p: isinstance(p['_quality'], str), mediastreamarray))
+        if tools.getLength(li) > 0:
+            return li[0]['_quality']
+
         li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
         if tools.getLength(li) > 0:
-            return max(li, key=lambda p: int(p['_quality']))['_quality']
+            return max(li, key=lambda p: str(p['_quality']))['_height']
 
-        return -1
+        return None
 
     @staticmethod
     def _getQuality(quality):
-        if quality == 0:
+        if quality == 'auto':
+            return 'auto'
+        elif quality == 0:
             return '270p'
         elif quality == 1:
             return '360p'
@@ -185,13 +191,13 @@ class ardmediathekCore:
 
             title = show['longTitle']
             widget = content['widgets'][0]
-            best_quality = -1
+            best_quality = None
 
             mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
             if tools.getLength(mediastreamarray) > 0:
                 best_quality = self._getBestQuality(mediastreamarray)
 
-            if best_quality > -1:
+            if best_quality is not None:
 
                 if showExists_id > 0:
                     DL_items.deleteItem(self._con, showExists_id)
@@ -230,7 +236,7 @@ class ardmediathekCore:
                         item = (
                             subItem_id,
                             self._getQuality_id(quality),
-                            best_quality == stream['_quality'],
+                            best_quality == quality,
                             tools.getHoster(stream['_stream']),
                             None,
                             stream['_stream'],
