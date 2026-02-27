@@ -120,7 +120,10 @@ class ardmediathekCore:
                 }
 
                 page = requests_session.get(url, timeout=self._timeout, headers=headers)
-                return json.loads(page.content)
+                if page.status_code == 200:
+                    return json.loads(page.content)
+
+                return None
 
             except requests.exceptions.ConnectionError as e:
                 conn_tries += 1
@@ -178,7 +181,7 @@ class ardmediathekCore:
             detail_url = show['links']['target']['href']
             content = self._getContent(requests_session, detail_url)
             if content is None:
-                return False
+                continue
 
             title = show['longTitle']
             widget = content['widgets'][0]
