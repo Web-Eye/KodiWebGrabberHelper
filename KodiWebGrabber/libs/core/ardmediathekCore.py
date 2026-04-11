@@ -14,10 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import collections
 import json
 import random
 import time
+
 import requests
 
 from .Datalayer.DL_itemTags import DL_itemTags
@@ -82,30 +83,28 @@ class ardmediathekCore:
 
     @staticmethod
     def _getBestQuality(mediastreamarray):
-        li = list(filter(lambda p: isinstance(p['_quality'], str), mediastreamarray))
-        if tools.getLength(li) > 0:
-            return li[0]['_quality']
+        for e in mediastreamarray:
+            if isinstance(e.get("forcedLabel"), str) and e["forcedLabel"] == "Auto":
+                return "Auto"
 
-        li = list(filter(lambda p: isinstance(p['_quality'], int), mediastreamarray))
-        if tools.getLength(li) > 0:
-            return max(li, key=lambda p: str(p['_quality']))['_height']
+        valid = [p for p in mediastreamarray if isinstance(p.get("maxVResolutionPx"), int)]
+        if not valid:
+            return None
 
-        return None
+        best = max(valid, key=lambda p: p["maxVResolutionPx"])
+
+        if isinstance(best.get("forcedLabel"), str):
+            return best["forcedLabel"]
+
+        return f"{best['maxVResolutionPx']}p"
 
     @staticmethod
-    def _getQuality(quality):
-        if quality == 'auto':
-            return 'auto'
-        elif quality == 0:
-            return '270p'
-        elif quality == 1:
-            return '360p'
-        elif quality == 2:
-            return '540p'
-        elif quality == 3:
-            return '720p'
-        elif quality == 4:
-            return '1080p'
+    def _getQuality(stream):
+        if isinstance(stream.get("forcedLabel"), str):
+            return stream["forcedLabel"]
+
+        if isinstance(stream.get("maxVResolutionPx"), int):
+            return f"{stream['maxVResolutionPx']}p"
 
         return None
 
@@ -173,6 +172,7 @@ class ardmediathekCore:
             if self._page_count is not None and i >= self._page_count:
                 break
 
+
     def _getShows(self, requests_session, shows):
 
         if shows is None:
@@ -193,7 +193,7 @@ class ardmediathekCore:
             widget = content['widgets'][0]
             best_quality = None
 
-            mediastreamarray = widget['mediaCollection']['embedded']['_mediaArray'][0]['_mediaStreamArray']
+            mediastreamarray = self._getMediaStreamArray(widget)
             if tools.getLength(mediastreamarray) > 0:
                 best_quality = self._getBestQuality(mediastreamarray)
 
@@ -230,21 +230,48 @@ class ardmediathekCore:
                 row_count, subItem_id = DL_subItems.insertSubItem(self._con, item)
 
                 for stream in mediastreamarray:
+                    url = stream.get('url')
+                    if url is not None:
+                        quality = self._getQuality(stream)
+                        if quality is not None:
+                            item = (
+                                subItem_id,
+                                self._getQuality_id(quality),
+                                best_quality == quality,
+                                tools.getHoster(url),
+                                None,
+                                url,
+                            )
 
-                    quality = self._getQuality(stream['_quality'])
-                    if quality is not None:
-                        item = (
-                            subItem_id,
-                            self._getQuality_id(quality),
-                            best_quality == quality,
-                            tools.getHoster(stream['_stream']),
-                            None,
-                            stream['_stream'],
-                        )
-
-                        DL_links.insertLink(self._con, item)
+                            DL_links.insertLink(self._con, item)
 
         return True
+
+    @staticmethod
+    def _getMediaStreamArray(widget) -> list:
+
+        c = widget
+
+        if c is None:
+            return []
+
+        c = c.get("mediaCollection")
+        if c is None:
+            return []
+
+        c = c.get("embedded")
+        if c is None:
+            return []
+
+        c = c.get("streams")
+        if tools.getLength(c) == 0:
+            return []
+
+        for element in c:
+            if element.get("kind") == "main":
+                return element.get("media")
+
+        return c[0].get("media")
 
     @staticmethod
     def _getDateTime(srcDateTime):
@@ -252,6 +279,8 @@ class ardmediathekCore:
             srcFmt = '%Y-%m-%dT%H:%M:%SZ' if not '.' in srcDateTime else '%Y-%m-%dT%H:%M:%S.%fZ'
             dstFmt = '%Y-%m-%d %H:%M:%S'
             return tools.convertDateTime(srcDateTime, srcFmt, dstFmt)
+
+        return None
 
     def _addItemTag(self, _dict, tag):
         tag_id = DL_itemTags.getOrInsertItem(self._con, tag)
